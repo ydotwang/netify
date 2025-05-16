@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { useSpotify } from '@/contexts/SpotifyContext';
 import { useTransfer } from '@/contexts/TransferContext';
-import { getBackendUrl } from '@/utils/backend';
 
-const BACKEND_URL = getBackendUrl();
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
 
 const AlbumForm = () => {
   const [albumUrl, setAlbumUrl] = useState('');
