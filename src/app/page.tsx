@@ -21,7 +21,7 @@ export default function Home() {
               <h1 className="text-xl sm:text-4xl font-bold font-serif text-white whitespace-nowrap">
                 NetEase → Spotify
               </h1>
-              <FaSpotify className="text-green-500 text-5xl sm:text-[100px] flex-shrink-0" />
+              <FaSpotify className="text-green-500 text-6xl sm:text-[100px] flex-shrink-0" />
             </div>
             <p className="text-lg text-gray-200">Transfer your favorite playlists from NetEase Cloud Music</p>
           </div>
