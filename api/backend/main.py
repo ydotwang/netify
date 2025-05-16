@@ -74,6 +74,12 @@ async def playlist_info(url: str = Query(...)):
         raise HTTPException(502, detail=str(exc))
 
     pl = pdata.get("playlist") or pdata.get("result")
+    if len(pl.get("tracks", [])) < len(pl.get("trackIds", [])):
+        full_tracks = fetch_full_tracks(pid)
+        if not full_tracks:
+            full_tracks = fetch_tracks_by_ids(pl.get("trackIds", []))
+        if full_tracks:
+            pl["tracks"] = full_tracks
     tracks = [
         {"name": t.get("name"), "artist": t.get("ar", t.get("artists"))[0]["name"], "duration_ms": t.get("dt", t.get("duration"))}
         for t in pl.get("tracks", [])
@@ -90,6 +96,12 @@ async def transfer_playlist(payload: TransferBody):
         raise HTTPException(502, detail=str(exc))
 
     root = pdata.get("playlist") or pdata.get("result")
+    if len(root.get("tracks", [])) < len(root.get("trackIds", [])):
+        full_tracks = fetch_full_tracks(pid)
+        if not full_tracks:
+            full_tracks = fetch_tracks_by_ids(root.get("trackIds", []))
+        if full_tracks:
+            root["tracks"] = full_tracks
     playlist_name = payload.custom_name or f"{root.get('name')} (NetEase)"
 
     user_resp = requests.get("https://api.spotify.com/v1/me", headers=spotify_headers(payload.spotify_token))
@@ -205,5 +217,36 @@ def extract_playlist_id(url: str) -> str:
         return m.group(1)
 
     raise ValueError("No playlist id found in URL")
+
+
+# ---- extra helper to fetch full track list when necessary ------------------
+
+def fetch_full_tracks(pl_id: str):
+    """Return full track objects list from NetEase even for large playlists."""
+    resp = requests.get(
+        "https://music.163.com/api/v3/playlist/track/all",
+        params={"id": pl_id, "limit": 10000, "offset": 0},
+        headers={"User-Agent": "Mozilla/5.0", "Referer": "https://music.163.com/"},
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    return data.get("songs", [])
+
+
+# ---- fallback helper: fetch by song ids -----------------------------------
+
+def fetch_tracks_by_ids(track_ids):
+    """Fetch full track objects list given trackIds array from playlist api."""
+    ids = [tid["id"] if isinstance(tid, dict) else tid for tid in track_ids]
+    headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://music.163.com/"}
+    tracks = []
+    CHUNK = 300  # API seems to handle ~500 but stay safe
+    for i in range(0, len(ids), CHUNK):
+        slice_ids = ids[i:i+CHUNK]
+        ids_param = "[" + ",".join(map(str, slice_ids)) + "]"
+        resp = requests.get("https://music.163.com/api/song/detail", params={"ids": ids_param}, headers=headers)
+        resp.raise_for_status()
+        tracks.extend(resp.json().get("songs", []))
+    return tracks
 
 # ------------------------------------------------------------- 
