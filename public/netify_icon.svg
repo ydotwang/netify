@@ -1,0 +1,21 @@
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3bb7b7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f658a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#grad1)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Outer hexagon-ish shape -->
+    <polygon points="128 12 224 92 224 188 128 244 32 164 32 68"/>
+    <!-- Internal lines -->
+    <line x1="128" y1="12" x2="32"  y2="164"/>
+    <line x1="128" y1="12" x2="224" y2="92"/>
+    <line x1="224" y1="92" x2="32"  y2="68"/>
+    <line x1="224" y1="188" x2="32"  y2="68"/>
+    <line x1="224" y1="188" x2="128" y2="244"/>
+    <line x1="32"  y1="164" x2="224" y2="92"/>
+    <line x1="32"  y1="164" x2="128" y2="244"/>
+  </g>
+</svg>

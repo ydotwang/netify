@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+pyncm
+spotipy
+python-dotenv
+requests
+rapidfuzz 
