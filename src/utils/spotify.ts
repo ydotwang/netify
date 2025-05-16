@@ -57,57 +57,43 @@ export function generateAuthUrl(challenge: string): string {
 }
 
 // Exchange authorization code for access token
+import { getBackendUrl } from './backend';
+
 export async function exchangeCodeForToken(code: string): Promise<string> {
+  // Pass the code to our backend – backend holds the client secret and does
+  // the /api/token call server-side. This avoids CORS issues and works on
+  // any device (desktop, mobile, embedded web-view).
+
   const verifier = localStorage.getItem('code_verifier') || sessionStorage.getItem('code_verifier');
   if (!verifier) {
-    console.error('No code verifier found in localStorage or sessionStorage');
-    throw new Error('No code verifier found');
+    console.error('No code verifier found in storage');
   }
 
-  const params = new URLSearchParams({
-    client_id: SPOTIFY_CLIENT_ID!,
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: `${getRedirectUri()}/callback`,
-    code_verifier: verifier,
+  const backendUrl = `${getBackendUrl()}/spotify/token`;
+
+  const response = await fetch(backendUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code }),
   });
 
-  console.log('Exchanging code for token with params:', {
-    client_id: SPOTIFY_CLIENT_ID,
-    redirect_uri: `${getRedirectUri()}/callback`,
-    code_length: code.length,
-    verifier_length: verifier.length
-  });
+  const data = await response.json();
 
-  try {
-    const response = await fetch(SPOTIFY_TOKEN_ENDPOINT, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: params.toString(),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Token exchange error:', {
-        status: response.status,
-        statusText: response.statusText,
-        data
-      });
-      throw new Error(`Failed to exchange code for token: ${data.error_description || data.error || 'Unknown error'}`);
-    }
-
-    // Clear the code verifier after successful exchange
-    localStorage.removeItem('code_verifier');
-    sessionStorage.removeItem('code_verifier');
-    
-    return data.access_token;
-  } catch (error) {
-    console.error('Token exchange request failed:', error);
-    throw error;
+  if (!response.ok) {
+    console.error('Backend token exchange error', { status: response.status, data });
+    throw new Error(data.detail || 'Failed to exchange code');
   }
+
+  // The backend returns the full token payload. Store refresh_token for later.
+  if (data.refresh_token) {
+    localStorage.setItem('refresh_token', data.refresh_token);
+  }
+
+  // Clear verifier once code has been used (good housekeeping)
+  localStorage.removeItem('code_verifier');
+  sessionStorage.removeItem('code_verifier');
+
+  return data.access_token as string;
 }
 
 // Get current user's profile
