@@ -15,7 +15,6 @@ const getRedirectUri = () => {
     const origin = window.location.origin.replace('127.0.0.1', 'localhost');
     return origin;
   }
-
   throw new Error('No redirect URI configured');
 };
 const SPOTIFY_AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
