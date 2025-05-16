@@ -130,10 +130,10 @@ const AlbumForm = () => {
         <input id="cover-url" type="url" value={coverUrl} onChange={e=>setCoverUrl(e.target.value)} className="block w-full rounded-md border-gray-400 text-gray-900 placeholder-gray-700 focus:border-indigo-500 focus:ring-indigo-500 shadow-sm"/>
       </div> */}
 
-      <div>
+      {/* <div>
         <label htmlFor="cover-file" className="block text-sm font-medium text-gray-800 mb-1"> Upload a cover image (optional, JPEG ≤256KB)</label>
         <input id="cover-file" type="file" accept="image/jpeg" onChange={e=>setCoverFile(e.target.files?.[0]||null)} className="block w-full text-sm bg-white border border-gray-900 rounded-md cursor-pointer file:bg-indigo-600 file:text-white file:py-2 file:px-4 file:border-0 hover:file:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" />
-      </div>
+      </div> */}
 
       <button
         type="submit"
