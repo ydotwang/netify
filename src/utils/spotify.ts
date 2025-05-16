@@ -9,7 +9,11 @@ const getRedirectUri = () => {
   }
 
   if (typeof window !== 'undefined') {
-    return window.location.origin;
+    // In dev people often open the site via 127.0.0.1 even though only
+    // http://localhost:3000/callback is whitelisted in the Spotify Dashboard.
+    // Unify both forms so the redirect_uri always matches the allowed value.
+    const origin = window.location.origin.replace('127.0.0.1', 'localhost');
+    return origin;
   }
 
   throw new Error('No redirect URI configured');
