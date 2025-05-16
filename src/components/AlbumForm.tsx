@@ -2,7 +2,24 @@ import { useState } from 'react';
 import { useSpotify } from '@/contexts/SpotifyContext';
 import { useTransfer } from '@/contexts/TransferContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+// Determine backend origin in a safe way.
+// – In production you *must* set NEXT_PUBLIC_BACKEND_URL (e.g. https://netify-api.fly.dev)
+// – During local development we fall back to http://127.0.0.1:8000 **only when** the
+//   current site is also running on localhost/127.0.0.1 – so phones that open the
+//   deployed site will never point to an unreachable 127.0.0.1.
+function getBackendUrl(): string {
+  const env = process.env.NEXT_PUBLIC_BACKEND_URL?.trim();
+  if (env) return env.replace(/\/$/, '');
+
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1') {
+      return 'http://127.0.0.1:8000';
+    }
+  }
+
+  throw new Error('Backend URL not configured. Set NEXT_PUBLIC_BACKEND_URL in the environment.');
+}
 
 const AlbumForm = () => {
   const [albumUrl, setAlbumUrl] = useState('');
@@ -26,7 +43,7 @@ const AlbumForm = () => {
     try {
       // 1️⃣ Get playlist details from backend
       const infoRes = await fetch(
-        `${BACKEND_URL}/api/playlist-info?url=${encodeURIComponent(albumUrl)}`
+        `${getBackendUrl()}/api/playlist-info?url=${encodeURIComponent(albumUrl)}`
       );
       if (!infoRes.ok) {
         throw new Error('Failed to fetch playlist info');
@@ -50,7 +67,7 @@ const AlbumForm = () => {
         coverPayload = coverUrl;
       }
 
-      const transferRes = await fetch(`${BACKEND_URL}/api/transfer`, {
+      const transferRes = await fetch(`${getBackendUrl()}/api/transfer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: albumUrl, spotify_token: accessToken, custom_name: customName || undefined, cover_url: coverPayload }),
