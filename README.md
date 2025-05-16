@@ -1,4 +1,4 @@
-# Netify – Transfer NetEase Cloud Music playlists to Spotify 🎧
+# Netify – Transfer NetEase Cloud Music playlists to Spotify 🎧 网易云歌单转Spotify
 
 <p align="center">
   <img src="public/netify.jpg" alt="Netify logo" width="200" />
@@ -7,7 +7,27 @@
 Netify is a Next.js 14 + Tailwind + FastAPI application that lets you log in with Spotify and import any public NetEase Cloud Music playlist—tracks, name and cover art—with a single click.  
 Simply paste the NetEase share-link, hit **Transfer to Spotify**, and Netify creates a new private playlist in your account (up to 10 000 tracks) while showing progress and missing songs.
 
+Netify 是一个基于 Next.js 14、Tailwind 和 FastAPI 的应用程序，支持使用 Spotify 登录，并可一键导入任意公开的网易云音乐歌单——包括歌曲、名称和封面。
+你只需粘贴网易云的分享链接，点击 Transfer to Spotify（转移到 Spotify），Netify 就会在你的账号中创建一个新的私人歌单（最多支持 10,000 首歌曲），并显示导入进度及缺失的歌曲。
 ---
+
+## Live demo
+
+👉 https://netify-five.vercel.app/
+
+### How to use (English)
+1. Open the live demo link above and click **Log in with Spotify**.
+2. Authorise Netify – the callback will return you to the site.
+3. Copy a NetEase playlist link, e.g. `https://y.music.163.com/m/playlist?id=123456`.
+4. Paste it into the input box and press **Transfer to Spotify**.
+5. Wait until the progress bar reaches 100 %; a link to the new playlist will appear.
+
+### 使用指南 (中文)
+1. 访问上面的演示地址，点击 **Log in with Spotify** 并授权。
+2. 授权成功后返回网站。
+3. 复制网易云歌单分享链接，例如 `https://y.music.163.com/m/playlist?id=123456`。
+4. 粘贴到输入框，点击 **Transfer to Spotify**（转到 Spotify）。
+5. 等待进度条完成，页面会显示新的 Spotify 歌单链接。
 
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
