@@ -17,7 +17,12 @@ const jetMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "NetEase to Spotify Transfer",
   description: "Transfer your NetEase Cloud Music albums to Spotify playlists",
-  icons: { icon: "/netify_icon.svg" }
+  icons: { icon: "/netify_icon.svg" },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({
