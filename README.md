@@ -8,6 +8,7 @@ Netify is a Next.js 14 + Tailwind + FastAPI application that lets you log in wit
 Simply paste the NetEase share-link, hit **Transfer to Spotify**, and Netify creates a new private playlist in your account (up to 10 000 tracks) while showing progress and missing songs.
 
 Netify 是一个基于 Next.js 14、Tailwind 和 FastAPI 的应用程序，支持使用 Spotify 登录，并可一键导入任意公开的网易云音乐歌单——包括歌曲、名称和封面。
+你在这里可以将你的网易云歌单转到Spotify
 你只需粘贴网易云的分享链接，点击 Transfer to Spotify（转移到 Spotify），Netify 就会在你的账号中创建一个新的私人歌单（最多支持 10,000 首歌曲），并显示导入进度及缺失的歌曲。
 ---
 
