@@ -12,7 +12,7 @@ import SocialLinks from '@/components/SocialLinks';
 export default function Home() {
   return (
     <TransferProvider>
-      <main className="min-h-screen flex flex-col items-center bg-gray-900 px-4 justify-start pt-12 sm:justify-center sm:pt-0 pb-24 sm:pb-0">
+      <main className="min-h-screen flex flex-col items-center bg-gray-900 px-4 justify-start pt-12 sm:justify-center sm:pt-0 pb-18 sm:pb-0">
         <div className="w-full max-w-md">
           <div className="text-center mb-6 flex flex-col items-center">
             <img src="/netify.jpg" alt="Netify Logo" className="h-24 w-auto mb-4 rounded-lg shadow" />
