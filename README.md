@@ -1,3 +1,14 @@
+# Netify – Transfer NetEase Cloud Music playlists to Spotify 🎧
+
+<p align="center">
+  <img src="public/netify.jpg" alt="Netify logo" width="200" />
+</p>
+
+Netify is a Next.js 14 + Tailwind + FastAPI application that lets you log in with Spotify and import any public NetEase Cloud Music playlist—tracks, name and cover art—with a single click.  
+Simply paste the NetEase share-link, hit **Transfer to Spotify**, and Netify creates a new private playlist in your account (up to 10 000 tracks) while showing progress and missing songs.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
