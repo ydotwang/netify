@@ -17,7 +17,7 @@ export default function Home() {
           <div className="text-center mb-6 flex flex-col items-center">
             <img src="/netify.jpg" alt="Netify Logo" className="h-24 w-auto mb-4 rounded-lg shadow" />
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 mb-2 max-w-[90vw]">
-              <img src="/netease.png" alt="NetEase" className="h-14 w-14 sm:h-14 sm:w-14 object-contain flex-shrink-0" />
+              <img src="/netease.png" alt="NetEase" className="h-13 w-13 sm:h-14 sm:w-14 object-contain flex-shrink-0" />
               <h1 className="text-xl sm:text-4xl font-bold font-serif text-white whitespace-nowrap">
                 NetEase → Spotify
               </h1>
