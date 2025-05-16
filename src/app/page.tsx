@@ -12,12 +12,12 @@ import SocialLinks from '@/components/SocialLinks';
 export default function Home() {
   return (
     <TransferProvider>
-      <main className="min-h-screen flex flex-col items-center justify-center bg-gray-900 px-4">
+      <main className="min-h-screen flex flex-col items-center bg-gray-900 px-4 justify-start pt-12 sm:justify-center sm:pt-0 pb-24 sm:pb-0">
         <div className="w-full max-w-md">
           <div className="text-center mb-6 flex flex-col items-center">
             <img src="/netify.jpg" alt="Netify Logo" className="h-24 w-auto mb-4 rounded-lg shadow" />
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 mb-2 max-w-[90vw]">
-              <img src="/netease.png" alt="NetEase" className="h-12 w-12 sm:h-14 sm:w-14 object-contain flex-shrink-0" />
+              <img src="/netease.png" alt="NetEase" className="h-14 w-14 sm:h-14 sm:w-14 object-contain flex-shrink-0" />
               <h1 className="text-xl sm:text-4xl font-bold font-serif text-white whitespace-nowrap">
                 NetEase → Spotify
               </h1>
