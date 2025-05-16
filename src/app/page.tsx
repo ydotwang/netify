@@ -18,15 +18,15 @@ export default function Home() {
             <img src="/netify.jpg" alt="Netify Logo" className="h-24 w-auto mb-4 rounded-lg shadow" />
             <div className="flex items-center justify-center gap-4 mb-2">
               <img src="/netease.png" alt="NetEase" className="h-14 w-14 object-contain" />
-              <h1 className="text-4xl font-bold font-serif whitespace-nowrap">NetEase → Spotify</h1>
+              <h1 className="text-4xl font-bold font-serif whitespace-nowrap text-white">NetEase → Spotify</h1>
               <FaSpotify size={100} className="text-green-500" />
             </div>
-            <p className="text-lg">Transfer your favorite playlists from NetEase Cloud Music</p>
+            <p className="text-lg text-gray-200">Transfer your favorite playlists from NetEase Cloud Music</p>
           </div>
 
           {/* Login */}
           <div className="bg-white shadow-lg rounded-lg p-8 flex flex-col items-center gap-4">
-            <div className="cursor-pointer"><SpotifyLoginButton /></div>
+            <div className="cursor-pointer text-gray-900"><SpotifyLoginButton /></div>
 
           </div>
 

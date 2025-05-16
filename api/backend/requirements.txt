@@ -4,4 +4,5 @@ pyncm
 spotipy
 python-dotenv
 requests
-rapidfuzz 
+rapidfuzz
+httpx 

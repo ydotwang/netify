@@ -4,6 +4,7 @@
 import os, re, asyncio, logging, base64
 from datetime import date
 from typing import List, Dict, Optional
+from urllib.parse import urlparse, parse_qs
 
 import requests
 from fastapi import FastAPI, HTTPException, Query, Body
@@ -12,6 +13,7 @@ from pydantic import BaseModel
 from rapidfuzz import fuzz
 import unicodedata
 import re as _re
+import httpx
 
 app = FastAPI(title="Netify Backend API", version="1.0.0")
 
@@ -66,7 +68,7 @@ class TransferBody(BaseModel):
 @app.get("/api/playlist-info")
 async def playlist_info(url: str = Query(...)):
     try:
-        pid = _ALBUM_ID_RE.search(url.replace('#/', '')).group(1)
+        pid = extract_playlist_id(url)
         pdata = await get_playlist_data(pid)
     except Exception as exc:
         raise HTTPException(502, detail=str(exc))
@@ -82,7 +84,7 @@ async def playlist_info(url: str = Query(...)):
 @app.post("/api/transfer")
 async def transfer_playlist(payload: TransferBody):
     try:
-        pid = _ALBUM_ID_RE.search(payload.url.replace('#/', '')).group(1)
+        pid = extract_playlist_id(payload.url)
         pdata = await get_playlist_data(pid)
     except Exception as exc:
         raise HTTPException(502, detail=str(exc))
@@ -131,4 +133,77 @@ async def transfer_playlist(payload: TransferBody):
         except Exception:
             pass
 
-    return {"playlist_url": f"https://open.spotify.com/playlist/{sp_pl_id}", "missing": missing} 
+    return {"playlist_url": f"https://open.spotify.com/playlist/{sp_pl_id}", "missing": missing}
+
+
+@app.get("/")
+async def read_root():
+    return {"message": "Netify API is running"}
+
+
+@app.post("/spotify/token")
+async def get_spotify_token(code: str):
+    """Exchange Spotify authorization code for an access token (used by the frontend)."""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://accounts.spotify.com/api/token",
+                data={
+                    "grant_type": "authorization_code",
+                    "code": code,
+                    "redirect_uri": os.getenv("SPOTIFY_REDIRECT_URI"),
+                    "client_id": os.getenv("SPOTIFY_CLIENT_ID"),
+                    "client_secret": os.getenv("SPOTIFY_CLIENT_SECRET"),
+                },
+            )
+            response.raise_for_status()
+            return response.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/spotify/refresh")
+async def refresh_spotify_token(refresh_token: str):
+    """Refresh an expired Spotify access token."""
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://accounts.spotify.com/api/token",
+                data={
+                    "grant_type": "refresh_token",
+                    "refresh_token": refresh_token,
+                    "client_id": os.getenv("SPOTIFY_CLIENT_ID"),
+                    "client_secret": os.getenv("SPOTIFY_CLIENT_SECRET"),
+                },
+            )
+            response.raise_for_status()
+            return response.json()
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# --- Helper ---------------------------------------------------
+
+def extract_playlist_id(url: str) -> str:
+    """Return the numeric playlist id from a NetEase Cloud Music URL.
+
+    Supports URLs such as:
+    • https://music.163.com/#/playlist?id=123456
+    • https://y.music.163.com/m/playlist?id=123456&userid=…
+    • https://music.163.com/playlist/123456
+    """
+    parsed = urlparse(url)
+
+    # 1️⃣ Query-string ?id=123456
+    qs_id = parse_qs(parsed.query).get("id")
+    if qs_id and qs_id[0].isdigit():
+        return qs_id[0]
+
+    # 2️⃣ Regex fallback ( /playlist/123456 or id=123456 anywhere )
+    m = re.search(r"(?:/playlist/|id=)(\d+)", url)
+    if m:
+        return m.group(1)
+
+    raise ValueError("No playlist id found in URL")
+
+# ------------------------------------------------------------- 
