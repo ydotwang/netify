@@ -3,7 +3,7 @@ import { useSpotify } from '@/contexts/SpotifyContext';
 import { useTransfer } from '@/contexts/TransferContext';
 
 // Base path to the FastAPI serverless function (same-origin).
-const BACKEND_PREFIX = '/api/app';
+const BACKEND_PREFIX = '/api/app/api';
 
 const AlbumForm = () => {
   const [albumUrl, setAlbumUrl] = useState('');
