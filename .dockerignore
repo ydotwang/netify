@@ -1,0 +1,19 @@
+# flyctl launch added from .gitignore
+# Node / Next.js
+**/node_modules
+**/.next
+**/out
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Python virtual-env
+**/.venv
+
+# Env files
+**/.env*
+!**/.env.example
+
+# Mac
+**/.DS_Store
+fly.toml
