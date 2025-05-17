@@ -152,7 +152,6 @@ async def transfer_playlist(payload: TransferBody):
 async def read_root():
     return {"message": "Netify API is running"}
 
-
 @app.post("/spotify/token")
 async def get_spotify_token(code: str):
     """Exchange Spotify authorization code for an access token (used by the frontend)."""
