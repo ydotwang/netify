@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/*.py": {
-      "runtime": "python@3.10",
+      "runtime": "python3.11",
       "maxDuration": 15
     }
   }
