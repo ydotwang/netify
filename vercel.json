@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/*.py": {
-      "runtime": "python@3.9",
+    "api/app.py": {
+      "runtime": "@vercel/python",
       "maxDuration": 15
     }
   }
