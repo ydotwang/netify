@@ -10,24 +10,18 @@ const nextConfig = {
    */
   async rewrites() {
     if (isDev) {
-      // During local development proxy directly to the deployed backend
-      // so no uvicorn is required locally.
+      // Proxy all api calls to the deployed backend when developing locally
       return [
         {
-          source: '/backend/main/:path*',
-          destination: 'https://netify-five.vercel.app/api/backend/main/:path*',
+          source: '/api/:path*',
+          destination: 'https://netify-five.vercel.app/api/:path*',
         },
       ];
     }
 
-    // Production: map the friendly /backend/main/* path to the serverless
-    // function path /api/backend/main/*.
-    return [
-      {
-        source: '/backend/main/:path*',
-        destination: '/api/backend/main/:path*',
-      },
-    ];
+    // No rewrites needed in production – same-origin /api/* already maps to
+    // the Python Serverless Function.
+    return [];
   },
 };
 

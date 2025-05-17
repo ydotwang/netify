@@ -7,10 +7,5 @@
     }
   },
 
-  "rewrites": [
-    {
-      "source": "/backend/main/:path*",
-      "destination": "/api/backend/main/:path*"
-    }
-  ]
+  "rewrites": []
 }
