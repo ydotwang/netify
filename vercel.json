@@ -5,5 +5,11 @@
     "api/backend/main.py": {
       "maxDuration": 15
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/backend/main/:path*",
+      "destination": "/api/backend/main/:path*"
+    }
+  ]
 } 
