@@ -2,14 +2,15 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
 
   "functions": {
-    "api/backend/main.py": {
-      "maxDuration": 15
+    "api/backend/main/api/*.py": {
+      "runtime": "python3.9"
     }
   },
+
   "rewrites": [
     {
-      "source": "/api/backend/main/:path*",
-      "destination": "https://netify-five.vercel.app/api/backend/main/:path*"
+      "source": "/backend/main/:path*",
+      "destination": "/api/backend/main/:path*"
     }
   ]
-} 
+}
