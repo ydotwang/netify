@@ -33,7 +33,7 @@ export default function Home() {
               <span className="font-semibold">Access required:</span>
               &nbsp;this app can be used only after Oliver grants permission after you provide your Spotify email account.<br/>
               <a href="mailto:oliverdotwang@gmail.com" className="underline font-medium hover:text-yellow-900">Request access</a>
-              <div className="text-xs sm:text-sm text-yellow-900 select-all">&nbsp;oliverdotwang@gmail.com</div>
+              <span className="block text-xs sm:text-sm text-yellow-900 select-all">&nbsp;oliverdotwang@gmail.com</span>
             </p>
           </div>
 
