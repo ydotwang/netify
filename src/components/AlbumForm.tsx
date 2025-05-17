@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useSpotify } from '@/contexts/SpotifyContext';
 import { useTransfer } from '@/contexts/TransferContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+// Update this to use the Fly.io API URL
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
 
 const AlbumForm = () => {
   const [albumUrl, setAlbumUrl] = useState('');
@@ -24,9 +25,26 @@ const AlbumForm = () => {
     setProgress(0);
 
     try {
+      // Clean the URL - extract the id parameter if present
+      let cleanUrl = albumUrl.trim();
+      // Use URL API to properly parse and extract id if possible
+      try {
+        const urlObj = new URL(cleanUrl);
+        const id = urlObj.searchParams.get('id');
+        if (id) {
+          // Just use the ID directly to avoid encoding issues
+          cleanUrl = `https://y.music.163.com/m/playlist?id=${id}`;
+        }
+      } catch (e) {
+        // If URL parsing fails, just use the original URL
+        console.warn("Could not parse URL, using as-is");
+      }
+
+      console.log("Using playlist URL:", cleanUrl);
+      
       // 1️⃣ Get playlist details from backend
       const infoRes = await fetch(
-        `${BACKEND_URL}/api/playlist-info?url=${encodeURIComponent(albumUrl)}`
+        `${BACKEND_URL}/api/playlist-info?url=${encodeURIComponent(cleanUrl)}`
       );
       if (!infoRes.ok) {
         throw new Error('Failed to fetch playlist info');
@@ -53,7 +71,7 @@ const AlbumForm = () => {
       const transferRes = await fetch(`${BACKEND_URL}/api/transfer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: albumUrl, spotify_token: accessToken, custom_name: customName || undefined, cover_url: coverPayload }),
+        body: JSON.stringify({ url: cleanUrl, spotify_token: accessToken, custom_name: customName || undefined, cover_url: coverPayload }),
       });
 
       if (!transferRes.ok) {
@@ -106,11 +124,11 @@ const AlbumForm = () => {
       <div>
         <label
           htmlFor="album-url"
-          className="block text-sm font-medium text-gray-800"
+          className="block text-sm font-medium text-gray-200"
         >
           NetEase Cloud Music Playlist URL 
           <br />
-          <div className="text-sm text-gray-500">(copy from share link of your playlist)</div>
+          <div className="text-sm text-gray-400">(copy from share link of your playlist)</div>
         </label>
         <div className="mt-1">
           <input
@@ -121,14 +139,23 @@ const AlbumForm = () => {
             onChange={(e) => setAlbumUrl(e.target.value)}
             placeholder="https://y.music.163.com/m/playlist?id=..."
             required
-            className="block w-full rounded-md border-gray-900 text-gray-900 placeholder-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            className="block w-full rounded-md border-gray-700 bg-gray-700/50 text-white placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="custom-name" className="block text-sm font-medium text-gray-800 mb-1">Custom playlist name (optional)</label>
-        <input id="custom-name" type="text" value={customName} onChange={e=>setCustomName(e.target.value)} className="block w-full rounded-md border-gray-900 text-gray-900 placeholder-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"/>
+        <label htmlFor="custom-name" className="block text-sm font-medium text-gray-200 mb-1">
+          Custom playlist name (optional)
+        </label>
+        <input 
+          id="custom-name" 
+          type="text" 
+          value={customName} 
+          onChange={e=>setCustomName(e.target.value)} 
+          className="block w-full rounded-md border-gray-700 bg-gray-700/50 text-white placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          placeholder="Enter custom name for your playlist"
+        />
       </div>
 
       {/* <div>

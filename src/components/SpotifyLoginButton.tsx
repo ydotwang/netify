@@ -1,4 +1,4 @@
-import { FaSpotify } from 'react-icons/fa';
+import { FaSpotify, FaSignOutAlt } from 'react-icons/fa';
 import { useSpotify } from '@/contexts/SpotifyContext';
 import { generateCodeChallenge, generateAuthUrl } from '@/utils/spotify';
 
@@ -32,41 +32,45 @@ const SpotifyLoginButton = () => {
 
   if (isAuthenticated && user) {
     return (
-      <div className="space-y-4 flex flex-col items-center">
-        <div className="flex items-center justify-center gap-4">
+      <div className="space-y-4 flex flex-col items-center w-full">
+        <div className="flex items-center gap-4 p-3 bg-gray-800/50 rounded-xl border border-gray-700 w-full">
           {user.images[0] && (
             <img
               src={user.images[0].url}
               alt={user.display_name}
-              className="w-12 h-12 rounded-full"
+              className="w-12 h-12 rounded-full border-2 border-green-500"
             />
           )}
-          <div>
-            <p className="text-center text-gray-600">
-              Logged in as {user.display_name}
+          <div className="flex-1">
+            <p className="text-gray-300 font-medium">
+              Logged in as
+            </p>
+            <p className="text-white font-bold">
+              {user.display_name}
             </p>
           </div>
         </div>
         <button
           onClick={logout}
-          className="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+          className="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl text-base font-medium text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 transition-all duration-200 shadow-lg"
         >
-          Log out
+          <FaSignOutAlt className="text-white" />
+          Sign Out
         </button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 flex flex-col items-center">
-      <p className="text-center text-gray-600">
+    <div className="space-y-4 flex flex-col items-center w-full">
+      <p className="text-center text-gray-300 px-3 py-2 bg-gray-800/50 rounded-xl border border-gray-700 w-full">
         Please log in with Spotify to transfer your music
       </p>
       <button
         onClick={handleLogin}
-        className="flex justify-center items-center gap-2 py-3 px-6 border border-transparent rounded-md shadow-md text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 cursor-pointer"
+        className="flex justify-center items-center gap-2 py-3 px-6 w-full rounded-xl text-base font-medium text-white bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-200 shadow-lg"
       >
-        <FaSpotify />
+        <FaSpotify className="text-xl" />
         Log in with Spotify
       </button>
     </div>

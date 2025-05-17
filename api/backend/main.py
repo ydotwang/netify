@@ -14,10 +14,21 @@ from rapidfuzz import fuzz
 import unicodedata
 import re as _re
 import httpx
+from dotenv import load_dotenv
+
+# Load environment variables from .env file if it exists
+load_dotenv()
 
 app = FastAPI(title="Netify Backend API", version="1.0.0")
 
-allowed_origins = ["*"]  # not needed on Vercel same-origin but kept for dev
+# Configure CORS - explicitly allow the frontend domain
+allowed_origins = [
+    "https://netify-five.vercel.app",  # Your production frontend
+    "https://netify-mjkk0dig8-ydotwangs-projects.vercel.app", # Your Vercel deployment
+    "http://localhost:3000",  # For local development
+    "*"  # Temporary fallback for development
+]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
