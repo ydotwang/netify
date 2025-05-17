@@ -13,8 +13,8 @@ const nextConfig = {
       // Proxy all api calls to the deployed backend when developing locally
       return [
         {
-          source: '/api/:path*',
-          destination: 'https://netify-five.vercel.app/api/index/:path*',
+          source: '/api/app/:path*',
+          destination: 'https://netify-five.vercel.app/api/app/:path*',
         },
       ];
     }
