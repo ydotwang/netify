@@ -13,6 +13,7 @@ const AlbumForm = () => {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const { isAuthenticated, accessToken, logout } = useSpotify();
   const { setResult, setProgress, setPreview } = useTransfer();
+  const [transferMessage, setTransferMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +24,7 @@ const AlbumForm = () => {
     setIsLoading(true);
     setResult(null);
     setProgress(0);
+    setTransferMessage(null);
 
     try {
       // Clean the URL - extract the id parameter if present
@@ -43,6 +45,7 @@ const AlbumForm = () => {
       console.log("Using playlist URL:", cleanUrl);
       
       // 1️⃣ Get playlist details from backend
+      setTransferMessage("Fetching playlist information...");
       const infoRes = await fetch(
         `${BACKEND_URL}/api/playlist-info?url=${encodeURIComponent(cleanUrl)}`
       );
@@ -51,14 +54,23 @@ const AlbumForm = () => {
       }
       const infoData = await infoRes.json();
 
+      // Display a warning for very large playlists
+      const trackCount = infoData.tracks?.length || 0;
+      if (trackCount > 1000) {
+        setTransferMessage(`This is a large playlist with ${trackCount.toLocaleString()} tracks. Transfer may take several minutes.`);
+      } else {
+        setTransferMessage(`Found ${trackCount.toLocaleString()} tracks in playlist. Starting transfer...`);
+      }
+
       setPreview({
         title: infoData.playlist_title,
         coverUrl: infoData.cover_url,
         tracks: infoData.tracks,
       });
-      setProgress(20);
+      setProgress(10);
 
       // 2️⃣ Trigger transfer on backend
+      setTransferMessage("Finding and adding tracks to Spotify...");
       let coverPayload: string | undefined = undefined;
       if (coverFile) {
         // convert to base64 data URL
@@ -67,6 +79,8 @@ const AlbumForm = () => {
       } else if (coverUrl) {
         coverPayload = coverUrl;
       }
+
+      setProgress(20);
 
       const transferRes = await fetch(`${BACKEND_URL}/api/transfer`, {
         method: 'POST',
@@ -80,10 +94,18 @@ const AlbumForm = () => {
           logout();
           throw new Error('Spotify session expired. Please log in again.');
         }
-        throw new Error('Transfer failed');
+        throw new Error(
+          transferRes.status === 502 
+            ? 'Server error while processing your request. The playlist might be too large or the server is under high load.'
+            : 'Transfer failed'
+        );
       }
 
       const transferData = await transferRes.json();
+
+      // Progress to 80% - waiting for cover image upload
+      setProgress(80);
+      setTransferMessage("Finalizing and setting cover image...");
 
       // 3️⃣ Build track status list using missing array
       const missingSet = new Set<string>(transferData.missing ?? []);
@@ -93,23 +115,32 @@ const AlbumForm = () => {
         status: missingSet.has(t.name) ? ('failed' as const) : ('success' as const),
       }));
 
+      // Calculate success rate
+      const totalTransferred = transferData.total_transferred || (tracks.length - missingSet.size);
+      const totalTracks = transferData.total_tracks || tracks.length;
+      const successRate = totalTracks > 0 ? Math.round((totalTransferred / totalTracks) * 100) : 0;
+      
       setResult({
         success: true,
-        message: 'Playlist transferred successfully!',
+        message: `Playlist transferred successfully! (${successRate}% success rate)`,
         playlistUrl: transferData.playlist_url,
         playlistName: infoData.playlist_title,
         albumArt: infoData.cover_url,
         tracks,
+        totalFound: totalTracks,
+        totalTransferred,
       });
       setProgress(100);
+      setTransferMessage(null);
     } catch (error) {
       console.error('Failed to transfer playlist:', error);
       const err = (error as Error).message || '';
       setResult({
         success: false,
-        message: err.includes('Spotify session expired') ? err : 'Failed to transfer playlist. Please try again.',
+        message: err.includes('Spotify session expired') ? err : `Failed to transfer playlist: ${err}`,
       });
       setProgress(null);
+      setTransferMessage(null);
     } finally {
       setIsLoading(false);
     }
@@ -167,6 +198,20 @@ const AlbumForm = () => {
         <label htmlFor="cover-file" className="block text-sm font-medium text-gray-800 mb-1"> Upload a cover image (optional, JPEG ≤256KB)</label>
         <input id="cover-file" type="file" accept="image/jpeg" onChange={e=>setCoverFile(e.target.files?.[0]||null)} className="block w-full text-sm bg-white border border-gray-900 rounded-md cursor-pointer file:bg-indigo-600 file:text-white file:py-2 file:px-4 file:border-0 hover:file:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" />
       </div> */}
+
+      {transferMessage && (
+        <div className="text-sm py-3 px-4 bg-indigo-900/50 border border-indigo-800 rounded-lg text-indigo-300">
+          {transferMessage}
+          {isLoading && (
+            <div className="equalizer mt-2 mx-auto">
+              <div className="bar"></div>
+              <div className="bar"></div>
+              <div className="bar"></div>
+              <div className="bar"></div>
+            </div>
+          )}
+        </div>
+      )}
 
       <button
         type="submit"

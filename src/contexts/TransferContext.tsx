@@ -14,6 +14,8 @@ interface TransferResult {
   playlistName?: string;
   albumArt?: string;
   tracks?: Track[];
+  totalFound?: number;
+  totalTransferred?: number;
 }
 
 interface PreviewData {

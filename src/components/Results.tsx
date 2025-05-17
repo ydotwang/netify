@@ -1,5 +1,21 @@
-import { FaSpotify, FaExclamationTriangle } from 'react-icons/fa';
+import { FaSpotify, FaExclamationTriangle, FaCheck, FaMusic } from 'react-icons/fa';
 import { useTransfer } from '@/contexts/TransferContext';
+
+// Update the TransferResult type to include the new fields
+type TransferResult = {
+  success: boolean;
+  message: string;
+  playlistUrl?: string;
+  playlistName?: string;
+  albumArt?: string;
+  tracks?: {
+    name: string;
+    artist: string;
+    status: 'success' | 'failed';
+  }[];
+  totalFound?: number;
+  totalTransferred?: number;
+};
 
 const Results = () => {
   const { result } = useTransfer();
@@ -10,57 +26,51 @@ const Results = () => {
 
   const successCount = result.tracks?.filter((t) => t.status === 'success').length ?? 0;
   const failedCount = result.tracks?.filter((t) => t.status === 'failed').length ?? 0;
+  
+  // Use the new fields if available
+  const totalTransferred = result.totalTransferred || successCount;
+  const totalFound = result.totalFound || (result.tracks?.length || 0);
 
   return (
-    <div className="mt-6">
+    <div className="mt-6 relative">
       <div
-        className={`p-4 rounded-md ${
+        className={`p-5 rounded-xl ${
           result.success
-            ? 'bg-green-50 text-green-800'
-            : 'bg-red-50 text-red-800'
+            ? 'bg-gradient-to-r from-green-900/40 to-green-800/40 border border-green-700'
+            : 'bg-gradient-to-r from-red-900/40 to-red-800/40 border border-red-700'
         }`}
       >
+        {/* Add decorative sparkles for success */}
+        {result.success && (
+          <>
+            <div className="sparkle absolute -top-2 -right-2 text-sm">✨</div>
+            <div className="sparkle absolute -bottom-1 -left-1 text-sm" style={{ animationDelay: '0.4s' }}>✨</div>
+          </>
+        )}
+        
         <div className="flex">
           <div className="flex-shrink-0">
             {result.success ? (
-              <svg
-                className="h-5 w-5 text-green-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                <FaCheck className="h-5 w-5 text-white" />
+              </div>
             ) : (
-              <svg
-                className="h-5 w-5 text-red-400"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center">
+                <FaExclamationTriangle className="h-5 w-5 text-white" />
+              </div>
             )}
           </div>
-          <div className="ml-3">
-            <p className="text-sm font-medium">{result.message}</p>
+          <div className="ml-4 flex-1">
+            <p className="text-base font-medium text-white">{result.message}</p>
             {result.playlistUrl && (
-              <div className="mt-2">
+              <div className="mt-3">
                 <a
                   href={result.playlistUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-green-600 hover:text-green-700"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-colors duration-200 rounded-lg text-white font-medium shine"
                 >
-                  <FaSpotify />
+                  <FaSpotify className="text-xl" />
                   Open playlist in Spotify →
                 </a>
               </div>
@@ -70,42 +80,80 @@ const Results = () => {
       </div>
 
       {result.tracks && result.tracks.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-lg font-medium text-gray-900">
-            {result.playlistName}
-          </h3>
-          <p className="text-sm text-gray-600 mt-1">
-            {successCount} tracks transferred successfully
-            {failedCount > 0 && ` (${failedCount} failed)`}
+        <div className="mt-6">
+          <div className="flex items-center mb-3">
+            <h3 className="text-lg font-medium text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-500">
+              {result.playlistName}
+            </h3>
+            <div className="ml-3 flex items-center">
+              <FaMusic className="text-indigo-400 float" />
+            </div>
+          </div>
+          
+          <p className="text-sm text-gray-400 mt-1 mb-3">
+            <span className="text-green-400 font-medium">{totalTransferred}</span> of {totalFound} tracks transferred successfully
+            {failedCount > 0 && (
+              <span> (<span className="text-red-400 font-medium">{failedCount}</span> not found on Spotify)</span>
+            )}
           </p>
-          <ul className="mt-4 space-y-2">
-            {result.tracks.map((track, index) => (
-              <li
-                key={index}
-                className="flex items-center justify-between p-2 rounded-md"
-                style={{ backgroundColor: track.status === 'failed' ? 'rgb(254 242 242)' : 'transparent' }}
-              >
-                <div>
-                  <p className="font-medium">{track.name}</p>
-                  <p className="text-sm text-gray-600">
-                    {track.artist}
-                  </p>
-                </div>
-                {track.status === 'success' ? (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Added
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    <FaExclamationTriangle size={12} />
-                    Not Found
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
+          
+          <img 
+            src="/divider1.png" 
+            alt="" 
+            className="h-2 w-full object-contain opacity-40 mx-auto mb-3"
+          />
+          
+          <div className="max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+            <ul className="space-y-2">
+              {result.tracks.map((track, index) => (
+                <li
+                  key={index}
+                  className={`flex items-center justify-between p-2 rounded-lg backdrop-blur-sm ${
+                    track.status === 'failed' 
+                      ? 'bg-red-900/20 border border-red-800/50' 
+                      : 'bg-gray-800/40 border border-gray-700/50 hover:bg-gray-700/40 transition-colors'
+                  }`}
+                >
+                  <div>
+                    <p className="font-medium text-gray-200">{track.name}</p>
+                    <p className="text-sm text-gray-400">
+                      {track.artist}
+                    </p>
+                  </div>
+                  {track.status === 'success' ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/50 border border-green-800 text-green-300">
+                      <FaCheck className="mr-1" size={10} />
+                      Added
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/50 border border-red-800 text-red-300">
+                      <FaExclamationTriangle size={10} />
+                      Not Found
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       )}
+      
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(55, 65, 81, 0.3);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(99, 102, 241, 0.5);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(99, 102, 241, 0.7);
+        }
+      `}</style>
     </div>
   );
 };
