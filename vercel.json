@@ -3,7 +3,6 @@
 
   "functions": {
     "api/backend/main.py": {
-      "runtime": "python3.9",
       "maxDuration": 15
     }
   }
