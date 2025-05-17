@@ -14,7 +14,7 @@ const nextConfig = {
       return [
         {
           source: '/api/:path*',
-          destination: 'https://netify-five.vercel.app/api/:path*',
+          destination: 'https://netify-five.vercel.app/api/index/:path*',
         },
       ];
     }
