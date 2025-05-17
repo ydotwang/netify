@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/backend/main.py": {
-      "runtime": "vercel-python",
+    "api/app.py": {
+      "runtime": "@vercel/python",
       "maxDuration": 15
     }
   }
