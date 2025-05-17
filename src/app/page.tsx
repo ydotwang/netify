@@ -36,8 +36,6 @@ export default function Home() {
               <span className="block text-xs sm:text-sm text-yellow-500 select-all">&nbsp;oliverdotwang@gmail.com</span>
             </p>
           </div>
-
-
         </div>
       </main>
     </TransferProvider>
