@@ -7,7 +7,8 @@ app = 'netify-api-lingering-leaf-3047'
 primary_region = 'sea'
 
 [build]
-  dockerfile = 'api/backend/Dockerfile'
+  dockerfile = "api/backend/Dockerfile"
+  context = "api/backend"
 
 [http_service]
   internal_port = 8080
