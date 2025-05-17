@@ -1,1 +1,13 @@
-{}
+{
+  "functions": {
+    "api/backend/main.py": {
+      "use": "@vercel/python"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/backend/main/:path*",
+      "destination": "/api/backend/main/:path*"
+    }
+  ]
+}
