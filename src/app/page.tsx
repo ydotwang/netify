@@ -21,7 +21,7 @@ export default function Home() {
               <h1 className="text-xl sm:text-4xl font-bold font-serif text-white whitespace-nowrap">
                 NetEase → Spotify
               </h1>
-              <FaSpotify className="text-green-500 text-4xl sm:text-5xl flex-shrink-0" />
+              <FaSpotify className="text-green-500 text-4xl sm:text-6xl flex-shrink-0" />
             </div>
             <p className="text-lg text-gray-200">Transfer your favorite playlists from NetEase Cloud Music ✨✨✨</p>
           </div>
@@ -29,11 +29,11 @@ export default function Home() {
           {/* Login */}
           <div className="bg-white shadow-lg rounded-lg p-8 flex flex-col items-center gap-4">
             <div className="cursor-pointer text-gray-900"><SpotifyLoginButton /></div>
-            <p className="text-center mt-4 bg-yellow-50 border shadow-md border-yellow-50 text-yellow-400 text-sm sm:text-base px-3 py-2 rounded-md shadow space-y-1">
+            <p className="text-center mt-4 bg-yellow-50 border border-yellow-50 text-yellow-500 text-sm sm:text-base px-3 py-2 rounded-md shadow space-y-1">
               <span className="font-semibold">Access required:</span>
               &nbsp;this app can be used only after Oliver grants permission after you provide your Spotify email account.<br/>
-              <a href="mailto:oliverdotwang@gmail.com" className="underline font-medium text-yellow-500 hover:text-black-900">Request access</a>
-              <span className="block text-xs sm:text-sm text-yellow-500 select-all">&nbsp;oliverdotwang@gmail.com</span>
+              <a href="mailto:oliverdotwang@gmail.com" className="underline font-medium hover:text-yellow-900">Request access</a>
+              <div className="text-xs sm:text-sm text-yellow-900 select-all">&nbsp;oliverdotwang@gmail.com</div>
             </p>
           </div>
 
