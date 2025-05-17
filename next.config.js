@@ -10,21 +10,22 @@ const nextConfig = {
    */
   async rewrites() {
     if (isDev) {
-      // During local development proxy to the deployed backend
+      // During local development proxy directly to the deployed backend
+      // so no uvicorn is required locally.
       return [
         {
-          source: '/api/:path*',
-          destination: 'https://netify-five.vercel.app/api/backend/main/api/:path*',
+          source: '/backend/main/:path*',
+          destination: 'https://netify-five.vercel.app/api/backend/main/:path*',
         },
       ];
     }
 
-    // In production (built by Vercel) rewrite to the nested serverless
-    // function path because we removed the api/index.py bridge file.
+    // Production: map the friendly /backend/main/* path to the serverless
+    // function path /api/backend/main/*.
     return [
       {
-        source: '/api/:path*',
-        destination: '/api/backend/main/api/:path*',
+        source: '/backend/main/:path*',
+        destination: '/api/backend/main/:path*',
       },
     ];
   },

@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pyncm
+spotipy
+python-dotenv
+requests
+rapidfuzz
+httpx 

@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useSpotify } from '@/contexts/SpotifyContext';
 import { useTransfer } from '@/contexts/TransferContext';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
-// const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://127.0.0.1:8000';
+// Base path to the FastAPI serverless function (same-origin).
+const BACKEND_PREFIX = '/backend/main';
 
 const AlbumForm = () => {
   const [albumUrl, setAlbumUrl] = useState('');
@@ -27,7 +27,7 @@ const AlbumForm = () => {
     try {
       // 1️⃣ Get playlist details from backend
       const infoRes = await fetch(
-        `${BACKEND_URL}/api/playlist-info?url=${encodeURIComponent(albumUrl)}`
+        `${BACKEND_PREFIX}/api/playlist-info?url=${encodeURIComponent(albumUrl)}`
       );
       if (!infoRes.ok) {
         throw new Error('Failed to fetch playlist info');
@@ -51,7 +51,7 @@ const AlbumForm = () => {
         coverPayload = coverUrl;
       }
 
-      const transferRes = await fetch(`${BACKEND_URL}/api/transfer`, {
+      const transferRes = await fetch(`${BACKEND_PREFIX}/api/transfer`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: albumUrl, spotify_token: accessToken, custom_name: customName || undefined, cover_url: coverPayload }),
