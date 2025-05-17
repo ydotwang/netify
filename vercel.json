@@ -1,13 +1,7 @@
 {
   "functions": {
     "api/backend/main.py": {
-      "use": "@vercel/python"
+      "maxDuration": 15
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/backend/main/:path*",
-      "destination": "/api/backend/main/:path*"
-    }
-  ]
+  }
 }
