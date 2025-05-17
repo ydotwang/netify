@@ -145,7 +145,7 @@ async def transfer_playlist(payload: TransferBody):
         except Exception:
             pass
 
-    return {"playlist_url": f"https://open.spotify.com/playlist/{sp_pl_id}", "missing": missing}
+    return {"playlist_url": f"https://open.spotify.com/playlist/{sp_pl_id}", "missing": missing} 
 
 
 @app.get("/")

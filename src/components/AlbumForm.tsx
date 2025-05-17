@@ -10,7 +10,7 @@ const AlbumForm = () => {
   const [customName, setCustomName] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
   const [coverFile, setCoverFile] = useState<File | null>(null);
-  const { isAuthenticated, accessToken } = useSpotify();
+  const { isAuthenticated, accessToken, logout } = useSpotify();
   const { setResult, setProgress, setPreview } = useTransfer();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,6 +57,11 @@ const AlbumForm = () => {
       });
 
       if (!transferRes.ok) {
+        // If the backend says Spotify token invalid, ask user to log in again
+        if (transferRes.status === 401) {
+          logout();
+          throw new Error('Spotify session expired. Please log in again.');
+        }
         throw new Error('Transfer failed');
       }
 
@@ -81,9 +86,10 @@ const AlbumForm = () => {
       setProgress(100);
     } catch (error) {
       console.error('Failed to transfer playlist:', error);
+      const err = (error as Error).message || '';
       setResult({
         success: false,
-        message: 'Failed to transfer playlist. Please try again.',
+        message: err.includes('Spotify session expired') ? err : 'Failed to transfer playlist. Please try again.',
       });
       setProgress(null);
     } finally {
