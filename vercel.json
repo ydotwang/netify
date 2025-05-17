@@ -8,8 +8,8 @@
   },
   "rewrites": [
     {
-      "source": "/backend/main/:path*",
-      "destination": "/api/backend/main/:path*"
+      "source": "/api/backend/main/:path*",
+      "destination": "https://netify-five.vercel.app/api/backend/main/:path*"
     }
   ]
 } 
