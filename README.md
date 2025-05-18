@@ -41,7 +41,6 @@
   </table>
 </div>
 
-
 ## 🔍 How to use (English)
 
 1. Visit [Netify Web App](https://netify-five.vercel.app/) and click **Log in with Spotify**
