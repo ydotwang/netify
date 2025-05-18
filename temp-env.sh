@@ -1,0 +1,3 @@
+export SPOTIFY_CLIENT_ID=your_client_id
+export SPOTIFY_CLIENT_SECRET=your_client_secret
+export SPOTIFY_REDIRECT_URI=http://localhost:3000/callback

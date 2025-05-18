@@ -16,12 +16,14 @@ interface TransferResult {
   tracks?: Track[];
   totalFound?: number;
   totalTransferred?: number;
+  batchDetails?: string;
 }
 
 interface PreviewData {
   title: string;
   coverUrl: string;
   tracks: Track[];
+  totalTracksCount?: number;
 }
 
 interface TransferContextType {
@@ -31,6 +33,10 @@ interface TransferContextType {
   setProgress: (value: number | null) => void;
   preview: PreviewData | null;
   setPreview: (value: PreviewData | null) => void;
+  currentBatch: number;
+  setCurrentBatch: (batch: number) => void;
+  totalBatches: number;
+  setTotalBatches: (batches: number) => void;
 }
 
 const TransferContext = createContext<TransferContextType | undefined>(undefined);
@@ -39,9 +45,22 @@ export function TransferProvider({ children }: { children: ReactNode }) {
   const [result, setResult] = useState<TransferResult | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
   const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [currentBatch, setCurrentBatch] = useState<number>(0);
+  const [totalBatches, setTotalBatches] = useState<number>(0);
 
   return (
-    <TransferContext.Provider value={{ result, setResult, progress, setProgress, preview, setPreview }}>
+    <TransferContext.Provider value={{ 
+      result, 
+      setResult, 
+      progress, 
+      setProgress, 
+      preview, 
+      setPreview,
+      currentBatch,
+      setCurrentBatch,
+      totalBatches,
+      setTotalBatches
+    }}>
       {children}
     </TransferContext.Provider>
   );

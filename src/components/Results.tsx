@@ -1,5 +1,6 @@
-import { FaSpotify, FaExclamationTriangle, FaCheck, FaMusic } from 'react-icons/fa';
+import { FaSpotify, FaExclamationTriangle, FaCheck, FaMusic, FaLayerGroup } from 'react-icons/fa';
 import { useTransfer } from '@/contexts/TransferContext';
+import { useState } from 'react';
 
 // Update the TransferResult type to include the new fields
 type TransferResult = {
@@ -15,10 +16,12 @@ type TransferResult = {
   }[];
   totalFound?: number;
   totalTransferred?: number;
+  batchDetails?: string;
 };
 
 const Results = () => {
   const { result } = useTransfer();
+  const [showBatchDetails, setShowBatchDetails] = useState(false);
 
   if (!result) {
     return null;
@@ -77,6 +80,25 @@ const Results = () => {
             )}
           </div>
         </div>
+        
+        {/* Batch details toggle */}
+        {result.batchDetails && (
+          <div className="mt-3 pt-3 border-t border-green-700/50">
+            <button 
+              onClick={() => setShowBatchDetails(!showBatchDetails)}
+              className="text-xs flex items-center gap-1 text-green-400 hover:text-green-300 transition-colors"
+            >
+              <FaLayerGroup size={12} />
+              {showBatchDetails ? 'Hide' : 'Show'} batch processing details
+            </button>
+            
+            {showBatchDetails && (
+              <div className="mt-2 text-xs text-green-300 bg-green-900/30 p-2 rounded-lg">
+                {result.batchDetails}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {result.tracks && result.tracks.length > 0 && (

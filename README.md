@@ -32,27 +32,94 @@ Netify 是一个基于 Next.js 14、Tailwind 和 FastAPI 的应用程序，支�
 4. 粘贴到输入框，点击 **Transfer to Spotify**（转到 Spotify）。
 5. 等待进度条完成，页面会显示新的 Spotify 歌单链接。
 
+## Development
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+### Prerequisites
+
+1. Node.js 18+ for the frontend
+2. Python 3.9+ for the backend API
+3. A Spotify Developer account and registered application
+
+### Environment Setup
+
+Create a `.env.local` file in the root directory with the following content:
+```
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_spotify_client_id
+NEXT_PUBLIC_SPOTIFY_REDIRECT_URI=http://localhost:3000/callback
+```
+
+For the backend, create a `.env` file in the `api` directory:
+```
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:3000/callback
+```
+
+### Running Locally
 
 First, run the development server:
 
 ```bash
+# Install frontend dependencies
+npm install
+
+# Run the frontend
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+
+For the backend:
+```bash
+# Create a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install backend dependencies
+cd api
+pip install -r requirements.txt
+
+# Run the backend
+uvicorn backend.main:app --reload --port 8080
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Deployment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Frontend (Vercel)
+
+1. Push your code to a GitHub repository
+2. Import the project in Vercel
+3. Add the following environment variables:
+   - `NEXT_PUBLIC_BACKEND_URL`: URL of your deployed backend API
+   - `NEXT_PUBLIC_SPOTIFY_CLIENT_ID`: Your Spotify app's client ID
+   - `NEXT_PUBLIC_SPOTIFY_REDIRECT_URI`: Your deployed app's callback URL
+
+### Backend (Fly.io)
+
+1. Install the [Fly.io CLI](https://fly.io/docs/hands-on/install-flyctl/)
+2. Log in to Fly.io: `flyctl auth login`
+3. Deploy the API:
+   ```bash
+   flyctl deploy
+   ```
+4. Set environment secrets:
+   ```bash
+   flyctl secrets set SPOTIFY_CLIENT_ID=your_client_id
+   flyctl secrets set SPOTIFY_CLIENT_SECRET=your_client_secret
+   flyctl secrets set SPOTIFY_REDIRECT_URI=https://your-deployed-frontend.com/callback
+   ```
+
+## Batch Processing
+
+For large playlists (over 300 tracks), Netify uses a batch processing system:
+
+1. Tracks are processed in batches of 300 to avoid timeouts
+2. Each batch is fetched, matched with Spotify, and added to the playlist
+3. The UI shows which batch is currently being processed
+4. Error handling between batches ensures maximum reliability
 
 ## Learn More
 
@@ -62,9 +129,3 @@ To learn more about Next.js, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
