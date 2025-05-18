@@ -45,7 +45,7 @@
 ## 🔍 How to use (English)
 
 1. Visit [Netify Web App](https://netify-five.vercel.app/) and click **Log in with Spotify**
-2. Authorize the application (requires Spotify account)
+2. Authorize the application (requires Spotify account which is the email you use)
 3. Copy a NetEase Cloud Music playlist link, for example:
    ```
    https://y.music.163.com/m/playlist?id=123456
@@ -57,7 +57,7 @@
 ## 🔍 使用指南 (中文)
 
 1. 访问 [Netify 网页应用](https://netify-five.vercel.app/)，点击 **Log in with Spotify** 按钮
-2. 授权应用程序（需要 Spotify 账号）
+2. 授权应用程序（需要 Spotify 账号注册邮箱）
 3. 复制网易云音乐歌单分享链接，例如：
    ```
    https://y.music.163.com/m/playlist?id=123456
