@@ -5,7 +5,7 @@
   <img src="public/netify.jpg" alt="Netify logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
   <br/>
   <p>
-    <a href="https://netify-five.vercel.app/" target="_blank"><strong>🚀 Try it now</strong></a> •
+    <a href="https://netify-five.vercel.app/" target="_blank"><strong>🚀 Try it now</strong></a>
   </p>
 </div>
 
