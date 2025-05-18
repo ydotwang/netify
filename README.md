@@ -28,18 +28,19 @@
   <table>
     <tr>
       <td align="center">
-        <img src="public/screenshot-home.jpg" width="400px" alt="Home Screen"/>
+        <img src="public/screenshot-home.png" width="400px" alt="Home Screen"/>
         <br/>
         <em>Home Screen</em>
       </td>
       <td align="center">
-        <img src="public/screenshot-transfer.jpg" width="400px" alt="Transfer Process"/>
+        <img src="public/screenshot-transfer.png" width="400px" alt="Transfer Process"/>
         <br/>
         <em>Transfer Process</em>
       </td>
     </tr>
   </table>
 </div>
+
 
 ## 🔍 How to use (English)
 
