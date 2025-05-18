@@ -2,7 +2,7 @@
 # 网易云音乐歌单迁移至Spotify工具
 
 <div align="center">
-  <img src="public/netify.jpg" alt="Netify logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
+  <img src="netify.jpg" alt="Netify logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
   <br/>
   <p>
     <a href="https://netify-five.vercel.app/" target="_blank"><strong>🚀 Try it now</strong></a>
@@ -28,12 +28,12 @@
   <table>
     <tr>
       <td align="center">
-        <img src="public/screenshot-home.png" width="400px" alt="Home Screen"/>
+        <img src="screenshot-home.png" width="400px" alt="Home Screen"/>
         <br/>
         <em>Home Screen</em>
       </td>
       <td align="center">
-        <img src="public/screenshot-transfer.png" width="400px" alt="Transfer Process"/>
+        <img src="screenshot-transfer.png" width="400px" alt="Transfer Process"/>
         <br/>
         <em>Transfer Process</em>
       </td>
