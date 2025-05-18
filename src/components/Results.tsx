@@ -33,6 +33,9 @@ const Results = () => {
   // Use the new fields if available
   const totalTransferred = result.totalTransferred || successCount;
   const totalFound = result.totalFound || (result.tracks?.length || 0);
+  
+  // Calculate if we're showing partial results (for large playlists)
+  const isPartialDisplay = (result.tracks?.length || 0) < totalFound;
 
   return (
     <div className="mt-6 relative">
@@ -65,6 +68,19 @@ const Results = () => {
           </div>
           <div className="ml-4 flex-1">
             <p className="text-base font-medium text-white">{result.message}</p>
+            
+            {/* Display detailed counts for large playlists */}
+            {isPartialDisplay && (
+              <p className="text-sm text-green-300 mt-1">
+                {totalTransferred} of {totalFound} total tracks were transferred to Spotify
+                {totalFound > 1000 && (
+                  <span className="ml-1 text-xs bg-green-900/50 text-green-300 px-1.5 py-0.5 rounded">
+                    Showing preview of first {result.tracks?.length} tracks
+                  </span>
+                )}
+              </p>
+            )}
+            
             {result.playlistUrl && (
               <div className="mt-3">
                 <a
@@ -89,12 +105,17 @@ const Results = () => {
               className="text-xs flex items-center gap-1 text-green-400 hover:text-green-300 transition-colors"
             >
               <FaLayerGroup size={12} />
-              {showBatchDetails ? 'Hide' : 'Show'} batch processing details
+              {showBatchDetails ? 'Hide' : 'Show'} processing details
             </button>
             
             {showBatchDetails && (
               <div className="mt-2 text-xs text-green-300 bg-green-900/30 p-2 rounded-lg">
                 {result.batchDetails}
+                {totalFound > 1000 && (
+                  <p className="mt-1 text-yellow-300">
+                    Note: NetEase API only returns a preview of tracks in the UI, but all {totalFound} tracks were processed.
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -113,9 +134,19 @@ const Results = () => {
           </div>
           
           <p className="text-sm text-gray-400 mt-1 mb-3">
-            <span className="text-green-400 font-medium">{totalTransferred}</span> of {totalFound} tracks transferred successfully
-            {failedCount > 0 && (
-              <span> (<span className="text-red-400 font-medium">{failedCount}</span> not found on Spotify)</span>
+            {isPartialDisplay ? (
+              <span>
+                Showing {successCount + failedCount} of {totalFound} total tracks - 
+                <span className="text-green-400 font-medium">{totalTransferred}</span> transferred
+                {failedCount > 0 && <span> (<span className="text-red-400 font-medium">{failedCount}</span> not found)</span>}
+              </span>
+            ) : (
+              <span>
+                <span className="text-green-400 font-medium">{totalTransferred}</span> of {totalFound} tracks transferred successfully
+                {failedCount > 0 && (
+                  <span> (<span className="text-red-400 font-medium">{failedCount}</span> not found on Spotify)</span>
+                )}
+              </span>
             )}
           </p>
           

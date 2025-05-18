@@ -12,7 +12,7 @@ const PlaylistPreview = () => {
   const formattedTotalCount = totalTracksCount.toLocaleString();
   
   // Show special message when total tracks > displayed tracks
-  const isPartialDisplay = totalTracksCount > preview.tracks.length;
+  const isLargePlaylist = totalTracksCount > 1000;
 
   return (
     <div className="flex items-center gap-4 mb-4">
@@ -24,18 +24,9 @@ const PlaylistPreview = () => {
           {preview.title}
         </h3>
         <p className="text-sm text-gray-400">
-          {isPartialDisplay ? (
-            <>
-              <span>Processing {formattedTrackCount} of {formattedTotalCount} tracks</span>
-              <span className="ml-1 text-xs bg-indigo-900/50 text-indigo-300 px-1.5 py-0.5 rounded">Large playlist</span>
-            </>
-          ) : (
-            <>
-              {formattedTotalCount} {totalTracksCount === 1 ? 'track' : 'tracks'}
-              {totalTracksCount > 1000 && (
-                <span className="ml-1 text-xs bg-indigo-900/50 text-indigo-300 px-1.5 py-0.5 rounded">Large playlist</span>
-              )}
-            </>
+          Processing {formattedTotalCount} tracks
+          {isLargePlaylist && (
+            <span className="ml-1 text-xs bg-indigo-900/50 text-indigo-300 px-1.5 py-0.5 rounded">Large playlist</span>
           )}
         </p>
       </div>

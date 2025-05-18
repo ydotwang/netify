@@ -1,7 +1,7 @@
 import { useTransfer } from '@/contexts/TransferContext';
 
 const ProgressBar = () => {
-  const { progress, currentBatch, totalBatches } = useTransfer();
+  const { progress } = useTransfer();
 
   if (progress === null) return null;
 
@@ -13,11 +13,6 @@ const ProgressBar = () => {
             <span className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
               Progress
             </span>
-            {currentBatch > 0 && totalBatches > 1 && (
-              <span className="ml-2 text-xs font-semibold text-indigo-300">
-                Batch {currentBatch}/{totalBatches}
-              </span>
-            )}
           </div>
           <div className="text-right">
             <span className="text-xs font-semibold inline-block text-indigo-400">
@@ -44,14 +39,6 @@ const ProgressBar = () => {
             <div className="bar bg-indigo-400"></div>
             <div className="bar bg-purple-400"></div>
             <div className="bar bg-indigo-400"></div>
-          </div>
-        )}
-        
-        {/* Show batch details when processing batches */}
-        {currentBatch > 0 && totalBatches > 1 && progress < 100 && (
-          <div className="text-xs text-center text-indigo-300 mt-2">
-            Processing track batch {currentBatch} of {totalBatches}
-            <div className="spinner mt-1 mx-auto"></div>
           </div>
         )}
         

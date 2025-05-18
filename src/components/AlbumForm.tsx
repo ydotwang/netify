@@ -101,13 +101,13 @@ const AlbumForm = () => {
       setTotalBatches(estimatedBatches);
       
       if (totalTracksCount > trackCount) {
-        setTransferMessage(`This playlist has ${totalTracksCount.toLocaleString()} tracks and will be processed in ${estimatedBatches} batches. This may take 15-30 minutes. Please keep this page open.`);
+        setTransferMessage(`Processing ${totalTracksCount.toLocaleString()} tracks. This may take several minutes. Please keep this page open.`);
       } else if (trackCount > 2000) {
-        setTransferMessage(`This is a very large playlist with ${trackCount.toLocaleString()} tracks. Transfer may take 5-10 minutes. Please keep this page open.`);
+        setTransferMessage(`Processing ${trackCount.toLocaleString()} tracks. This may take 5-10 minutes. Please keep this page open.`);
       } else if (trackCount > 1000) {
-        setTransferMessage(`This is a large playlist with ${trackCount.toLocaleString()} tracks. Transfer may take 3-5 minutes. Please keep this page open.`);
+        setTransferMessage(`Processing ${trackCount.toLocaleString()} tracks. This may take 3-5 minutes. Please keep this page open.`);
       } else {
-        setTransferMessage(`Found ${trackCount.toLocaleString()} tracks in playlist. Starting transfer...`);
+        setTransferMessage(`Processing ${trackCount.toLocaleString()} tracks. Starting transfer...`);
       }
 
       setPreview({
@@ -143,43 +143,21 @@ const AlbumForm = () => {
 
       try {
         setTransferMessage("Processing all tracks. This may take several minutes for large playlists...");
-        setCurrentBatch(1);
         
         // For large playlists, update progress periodically to show it's still working
-        // Calculate progress increment per batch 
-        // Allow 75% of progress bar for batches (10% to 85%)
-        const progressPerBatch = estimatedBatches > 0 ? 75 / estimatedBatches : 75;
-        let batchStartProgress = 10;
-        
         if (totalTracksCount > 500) {
-          let currentBatchNumber = 1;
-          let batchProgress = 0;
-          const maxBatchProgress = 100; // Progress within a batch goes from 0-100%
+          let progressValue = 10;
           
           progressIntervalRef.current = window.setInterval(() => {
-            // Update the batch progress
-            batchProgress += 5; // Increment by 5% within current batch
-            if (batchProgress > maxBatchProgress) {
-              // Move to next batch
-              batchProgress = 0;
-              currentBatchNumber++;
-              setCurrentBatch(currentBatchNumber);
-              batchStartProgress += progressPerBatch;
-              
-              // Update the message for the new batch
-              if (currentBatchNumber <= estimatedBatches) {
-                setTransferMessage(`Processing batch ${currentBatchNumber} of ${estimatedBatches}... (${Math.floor(batchStartProgress)}% overall)`);
-              }
+            // Increment progress slowly to show the request is still processing
+            progressValue = Math.min(progressValue + 2, 85);
+            setProgress(progressValue);
+            
+            // Update the message occasionally with a track count update
+            if (progressValue % 10 === 0) {
+              setTransferMessage(`Processing ${totalTracksCount.toLocaleString()} tracks (${progressValue}% progress)`);
             }
-            
-            // Calculate overall progress
-            const overallProgress = Math.min(
-              Math.floor(batchStartProgress + (progressPerBatch * batchProgress / maxBatchProgress)), 
-              85
-            );
-            setProgress(overallProgress);
-            
-          }, totalTracksCount > 1500 ? 5000 : 3000); // Update interval based on playlist size
+          }, totalTracksCount > 1500 ? 5000 : 3000);
         }
 
         const transferRes = await fetch(`${BACKEND_URL}/api/transfer`, {
@@ -228,15 +206,16 @@ const AlbumForm = () => {
         const completedBatches = transferData.completed_batches || 0;
         const totalBatches = transferData.processed_batches || 1;
         
-        let batchesInfo = `Processed in ${completedBatches} of ${totalBatches} batches`;
-        if (completedBatches < totalBatches) {
-          batchesInfo += ` (${totalBatches - completedBatches} batches were not fully processed)`;
+        // We've simplified to a single batch, so we'll just show overall results
+        let batchesInfo = '';
+        if (totalTracksCount > 500) {
+          batchesInfo = `Processed ${totalTransferred} of ${totalTracks} total tracks`;
         }
         
         // Generate batch details
         const batchDetails = batchResults.map((batch: BatchResult) => 
-          `Batch ${batch.batch_number}: ${batch.matched_tracks}/${batch.total_tracks} tracks (${batch.success_rate}%)`
-        ).join(', ');
+          `Result: ${batch.matched_tracks}/${batch.total_tracks} tracks matched (${batch.success_rate}%)`
+        ).join('');
         
         // Build track status list using missing array
         // Note: For large playlists, the frontend only has a subset of the tracks, but the backend processed all of them

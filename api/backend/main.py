@@ -433,13 +433,19 @@ async def transfer_playlist(payload: TransferBody):
         logger.info(f"Transfer: Fetched {len(full_tracks)} tracks for playlist {pid}")
     else:
         # Fallback to fetching by IDs
-        logger.info(f"Transfer: Falling back to fetch_tracks_by_ids for playlist {pid}")
+        logger.info(f"Transfer: No tracks fetched, falling back to fetch_tracks_by_ids for playlist {pid}")
         track_ids = root.get("trackIds", [])
         full_tracks = fetch_tracks_by_ids(track_ids)
         
         if full_tracks:
             root["tracks"] = full_tracks
             logger.info(f"Transfer: Fetched {len(full_tracks)} tracks by IDs for playlist {pid}")
+        else:
+            # If we still have no tracks, use what we got from the initial playlist data
+            logger.warning("Transfer: All track fetching methods failed. Using tracks from initial playlist data.")
+            if not root.get("tracks"):
+                logger.error("Transfer: No tracks available in the playlist")
+                raise HTTPException(404, detail="No tracks found in the playlist")
     
     playlist_name = payload.custom_name or f"{root.get('name', 'NetEase Playlist')} (NetEase)"
     
@@ -489,160 +495,121 @@ async def transfer_playlist(payload: TransferBody):
     
     # Get all songs
     songs = root.get("tracks", [])
+    logger.info(f"Processing {len(songs)} total songs from NetEase")
     
     # Limit to maximum playlist size supported by Spotify
     if len(songs) > MAX_PLAYLIST_SIZE:
         logger.warning(f"Playlist exceeds Spotify limit of {MAX_PLAYLIST_SIZE} tracks, truncating")
         songs = songs[:MAX_PLAYLIST_SIZE]
     
-    # For large playlists, split into smaller batches to avoid timeouts
-    BATCH_SIZE = 300  # Process smaller batches
-    total_songs = len(songs)
-    total_batches = (total_songs + BATCH_SIZE - 1) // BATCH_SIZE  # Ceiling division
-    
+    # Process all tracks
     all_uris = []
     all_missing = []
-    all_batch_results = []  # Store individual batch results for reporting
     
-    logger.info(f"Processing {total_songs} songs in {total_batches} batches of {BATCH_SIZE}")
+    # Extract URIs for all tracks
+    logger.info(f"Beginning to search for {len(songs)} tracks on Spotify")
     
-    # Process all batches
-    for batch_num in range(total_batches):
-        start_idx = batch_num * BATCH_SIZE
-        end_idx = min(start_idx + BATCH_SIZE, total_songs)
+    # Use a smaller batch size for search to avoid overloading
+    search_batch_size = 50
+    song_batches = [songs[i:i+search_batch_size] for i in range(0, len(songs), search_batch_size)]
+    
+    for batch_idx, song_batch in enumerate(song_batches):
+        logger.info(f"Processing search batch {batch_idx+1}/{len(song_batches)} ({len(song_batch)} tracks)")
         
-        batch_songs = songs[start_idx:end_idx]
-        logger.info(f"*** STARTING BATCH {batch_num+1}/{total_batches} with {len(batch_songs)} songs (indices {start_idx}-{end_idx-1}) ***")
-        
-        # Force small delay between batches for API rate limiting
-        if batch_num > 0:
-            logger.info(f"Pausing for 5 seconds before starting batch {batch_num+1} to avoid rate limits")
-            await asyncio.sleep(5)
-        
-        try:
-            # Process this batch
-            batch_uris = []
-            batch_missing = []
-            
-            for i, song in enumerate(batch_songs):
-                try:
-                    if not song:
-                        logger.warning(f"Skipping invalid song at index {start_idx + i}")
-                        continue
-                        
-                    song_name = song.get("name", "")
-                    all_artists = get_all_artists(song)
-                    duration_ms = song.get("dt") or song.get("duration", 0)
+        for i, song in enumerate(song_batch):
+            try:
+                if not song:
+                    logger.warning(f"Skipping invalid song in batch {batch_idx+1}, index {i}")
+                    continue
                     
-                    if not song_name or not all_artists:
-                        logger.warning(f"Skipping song with missing data: name='{song_name}', artists='{all_artists}'")
-                        batch_missing.append(song_name or "Unknown track")
-                        continue
-                    
-                    logger.info(f"Batch {batch_num+1}: Searching for track: '{song_name}' by '{', '.join(all_artists)}'")
-                    uri = await search_track_on_spotify(song_name, all_artists, duration_ms, payload.spotify_token)
-                    
-                    if uri:
-                        batch_uris.append(uri)
-                        logger.info(f"Found match: {uri}")
-                    else:
-                        batch_missing.append(song_name)
+                song_name = song.get("name", "")
+                all_artists = get_all_artists(song)
+                duration_ms = song.get("dt") or song.get("duration", 0)
+                
+                if not song_name or not all_artists:
+                    logger.warning(f"Skipping song with missing data: name='{song_name}', artists='{all_artists}'")
+                    all_missing.append(song_name or "Unknown track")
+                    continue
+                
+                # Only log every 10th track to reduce log spam
+                if i % 10 == 0:
+                    logger.info(f"Searching for track: '{song_name}' by '{', '.join(all_artists)}'")
+                
+                uri = await search_track_on_spotify(song_name, all_artists, duration_ms, payload.spotify_token)
+                
+                if uri:
+                    all_uris.append(uri)
+                    if i % 20 == 0:  # Log less frequently
+                        logger.info(f"Found match {batch_idx*search_batch_size+i+1}/{len(songs)}: {uri}")
+                else:
+                    all_missing.append(song_name)
+                    if i % 20 == 0:  # Log less frequently
                         logger.info(f"No match found for: '{song_name}' by '{', '.join(all_artists)}'")
-                        
-                    # Add a small delay to avoid rate limiting - more aggressive for larger batches
-                    if i % 10 == 0 and i > 0:
-                        await asyncio.sleep(0.5)
-                        
-                except Exception as e:
-                    logger.error(f"Error searching for track {song.get('name', 'Unknown')}: {str(e)}")
-                    batch_missing.append(song.get('name', 'Unknown track'))
-            
-            # Add this batch's tracks to the playlist immediately
-            if batch_uris:
-                logger.info(f"Adding batch {batch_num+1} with {len(batch_uris)} tracks to playlist")
+                    
+            except Exception as e:
+                logger.error(f"Error searching for track {song.get('name', 'Unknown')}: {str(e)}")
+                all_missing.append(song.get('name', 'Unknown track'))
+        
+        # Add a delay between batches to avoid rate limiting
+        if batch_idx < len(song_batches) - 1:
+            await asyncio.sleep(1)
+    
+    logger.info(f"Found {len(all_uris)} matches for {len(songs)} tracks")
+    
+    # Add all tracks to the playlist in chunks to avoid Spotify API limits
+    if all_uris:
+        logger.info(f"Adding {len(all_uris)} tracks to Spotify playlist in chunks of {MAX_TRACKS_PER_REQUEST}")
+        
+        # Split into chunks of MAX_TRACKS_PER_REQUEST (100 tracks per request - Spotify limit)
+        chunks = [all_uris[i:i+MAX_TRACKS_PER_REQUEST] for i in range(0, len(all_uris), MAX_TRACKS_PER_REQUEST)]
+        
+        chunk_failures = 0  # Track failures
+        for i, chunk in enumerate(chunks):
+            try:
+                # Add more retries for chunk addition with exponential backoff
+                max_chunk_retries = 3
+                chunk_retry = 0
+                chunk_added = False
                 
-                # Split into chunks of MAX_TRACKS_PER_REQUEST
-                batch_chunks = [batch_uris[i:i+MAX_TRACKS_PER_REQUEST] for i in range(0, len(batch_uris), MAX_TRACKS_PER_REQUEST)]
-                
-                chunk_failures = 0  # Track failures
-                for i, chunk in enumerate(batch_chunks):
+                while not chunk_added and chunk_retry < max_chunk_retries:
                     try:
-                        # Add more retries for chunk addition with exponential backoff
-                        max_chunk_retries = 3
-                        chunk_retry = 0
-                        chunk_added = False
+                        retry_request(
+                            requests.post,
+                            f"https://api.spotify.com/v1/playlists/{sp_pl_id}/tracks",
+                            json={"uris": chunk},
+                            headers=spotify_headers(payload.spotify_token)
+                        )
+                        logger.info(f"Added chunk {i+1}/{len(chunks)} ({len(chunk)} tracks)")
+                        chunk_added = True
+                    except Exception as chunk_error:
+                        chunk_retry += 1
+                        logger.warning(f"Error adding chunk {i+1}, retry {chunk_retry}/{max_chunk_retries}: {chunk_error}")
+                        # Backoff delay
+                        await asyncio.sleep(2 ** chunk_retry)
                         
-                        while not chunk_added and chunk_retry < max_chunk_retries:
-                            try:
-                                retry_request(
-                                    requests.post,
-                                    f"https://api.spotify.com/v1/playlists/{sp_pl_id}/tracks",
-                                    json={"uris": chunk},
-                                    headers=spotify_headers(payload.spotify_token)
-                                )
-                                logger.info(f"Added chunk {i+1}/{len(batch_chunks)} of batch {batch_num+1} ({len(chunk)} tracks)")
-                                chunk_added = True
-                            except Exception as chunk_error:
-                                chunk_retry += 1
-                                logger.warning(f"Error adding chunk {i+1}, retry {chunk_retry}/{max_chunk_retries}: {chunk_error}")
-                                # Backoff delay
-                                await asyncio.sleep(2 ** chunk_retry)
-                                
-                        if not chunk_added:
-                            logger.error(f"Failed to add chunk {i+1} after {max_chunk_retries} retries")
-                            chunk_failures += 1
-                            
-                        # Add a longer delay between chunks
-                        if i < len(batch_chunks) - 1:
-                            await asyncio.sleep(2)
-                            
-                    except Exception as e:
-                        logger.error(f"Error adding chunk {i+1} of batch {batch_num+1}: {str(e)}")
-                        chunk_failures += 1
-                
-                # Add a warning if some chunks failed
-                if chunk_failures > 0:
-                    logger.warning(f"Batch {batch_num+1}: {chunk_failures}/{len(batch_chunks)} chunks failed to add to playlist")
-            
-            # Save batch results - include more details for debugging
-            all_batch_results.append({
-                "batch_number": batch_num + 1,
-                "total_tracks": len(batch_songs),
-                "matched_tracks": len(batch_uris),
-                "success_rate": round(len(batch_uris) / len(batch_songs) * 100) if batch_songs else 0,
-                "start_index": start_idx,
-                "end_index": end_idx - 1
-            })
-            
-            # Extend our tracking lists
-            all_uris.extend(batch_uris)
-            all_missing.extend(batch_missing)
-            
-            logger.info(f"*** COMPLETED BATCH {batch_num+1}/{total_batches}: {len(batch_uris)}/{len(batch_songs)} tracks matched ***")
-            
-            # Add a longer delay between batches to avoid rate limiting and timeouts
-            if batch_num < total_batches - 1:
-                logger.info(f"Waiting 5 seconds before starting next batch...")
-                await asyncio.sleep(5)
-                
-        except Exception as batch_error:
-            logger.error(f"Error processing batch {batch_num+1}: {str(batch_error)}")
-            logger.error(traceback.format_exc())
-            
-            # Still save the batch result with error information
-            all_batch_results.append({
-                "batch_number": batch_num + 1,
-                "total_tracks": len(batch_songs),
-                "matched_tracks": 0,
-                "success_rate": 0,
-                "error": str(batch_error),
-                "start_index": start_idx,
-                "end_index": end_idx - 1
-            })
-            
-            # Add a longer delay before trying the next batch
-            logger.info(f"Waiting 10 seconds before attempting next batch after error...")
-            await asyncio.sleep(10)
+                if not chunk_added:
+                    logger.error(f"Failed to add chunk {i+1} after {max_chunk_retries} retries")
+                    chunk_failures += 1
+                    
+                # Add a longer delay between chunks
+                if i < len(chunks) - 1:
+                    await asyncio.sleep(1)
+                    
+            except Exception as e:
+                logger.error(f"Error adding chunk {i+1}: {str(e)}")
+                chunk_failures += 1
+        
+        # Add a warning if some chunks failed
+        if chunk_failures > 0:
+            logger.warning(f"{chunk_failures}/{len(chunks)} chunks failed to add to playlist")
+    
+    # Create a single batch result for reporting
+    batch_result = {
+        "batch_number": 1,
+        "total_tracks": len(songs),
+        "matched_tracks": len(all_uris),
+        "success_rate": round(len(all_uris) / len(songs) * 100) if songs else 0
+    }
     
     # Add cover image
     cover_url = payload.cover_url or root.get("coverImgUrl")
@@ -686,17 +653,14 @@ async def transfer_playlist(payload: TransferBody):
     success_rate = round((len(all_uris) / true_total_count) * 100) if true_total_count > 0 else 0
     logger.info(f"Transfer complete: {len(all_uris)}/{true_total_count} tracks transferred ({success_rate}% success rate)")
     
-    for batch_result in all_batch_results:
-        logger.info(f"Batch {batch_result['batch_number']}: {batch_result['matched_tracks']}/{batch_result['total_tracks']} tracks ({batch_result['success_rate']}%)")
-    
     return {
         "playlist_url": f"https://open.spotify.com/playlist/{sp_pl_id}",
         "missing": all_missing,
         "total_transferred": len(all_uris),
         "total_tracks": true_total_count,  # Use the true total count here
-        "processed_batches": total_batches,
-        "batch_results": all_batch_results,  # Include batch-specific results
-        "completed_batches": len(all_batch_results)  # How many batches were actually processed
+        "processed_batches": 1,  # Single batch processing approach
+        "batch_results": [batch_result],
+        "completed_batches": 1
     }
 
 
@@ -780,57 +744,165 @@ def fetch_full_tracks(pl_id: str):
     try:
         logger.info(f"Fetching full tracks for playlist {pl_id}")
         all_songs = []
+        
+        # STEP 1: First get the trackIds to understand the true playlist size
+        logger.info("Step 1: Getting all trackIds for the playlist")
+        try:
+            playlist_resp = requests.get(
+                "https://music.163.com/api/v6/playlist/detail",
+                params={"id": pl_id, "n": 10000},
+                headers={"User-Agent": "Mozilla/5.0", "Referer": "https://music.163.com/"},
+                timeout=60
+            )
+            playlist_resp.raise_for_status()
+            playlist_data = playlist_resp.json()
+            
+            playlist = playlist_data.get("playlist") or playlist_data.get("result", {})
+            track_ids = playlist.get("trackIds", [])
+            
+            if track_ids:
+                logger.info(f"Found {len(track_ids)} trackIds in the playlist")
+            else:
+                logger.warning("No trackIds found in playlist detail response")
+                # Try alternative endpoint for trackIds
+                alt_resp = requests.get(
+                    "https://music.163.com/api/v3/playlist/detail",
+                    params={"id": pl_id, "n": 10000},
+                    headers={"User-Agent": "Mozilla/5.0", "Referer": "https://music.163.com/"},
+                    timeout=60
+                )
+                alt_data = alt_resp.json()
+                playlist = alt_data.get("playlist") or alt_data.get("result", {})
+                track_ids = playlist.get("trackIds", [])
+                logger.info(f"Alternative endpoint found {len(track_ids)} trackIds")
+        except Exception as e:
+            logger.warning(f"Error getting trackIds: {e}")
+            track_ids = []
+        
+        # STEP 2: Fetch tracks in batches using track/all endpoint with pagination
+        logger.info("Step 2: Fetching tracks with pagination using track/all endpoint")
         offset = 0
-        max_retries = 3
+        limit = 1000  # NetEase API generally accepts up to 1000 per request
         
         while True:
-            logger.info(f"Fetching tracks with offset {offset}")
-            retry_count = 0
-            success = False
-            
-            # Add retry logic for each request
-            while not success and retry_count < max_retries:
-                try:
-                    resp = requests.get(
-                        "https://music.163.com/api/v3/playlist/track/all",
-                        params={"id": pl_id, "limit": 1000, "offset": offset},
-                        headers={"User-Agent": "Mozilla/5.0", "Referer": "https://music.163.com/"},
-                        timeout=60  # Increase timeout for large playlists
-                    )
-                    resp.raise_for_status()
-                    success = True
-                except Exception as e:
-                    retry_count += 1
-                    logger.warning(f"Error fetching tracks at offset {offset}, retry {retry_count}/{max_retries}: {e}")
-                    if retry_count < max_retries:
-                        # Exponential backoff
-                        backoff_time = (2 ** retry_count) + random.uniform(0, 1)
-                        logger.info(f"Retrying in {backoff_time:.2f} seconds...")
-                        time.sleep(backoff_time)
-                    else:
-                        logger.error(f"Max retries reached for offset {offset}")
-                        raise
-            
-            data = resp.json()
-            songs = data.get("songs", [])
-            
-            if not songs:
-                # No more songs returned
-                break
+            try:
+                logger.info(f"Fetching tracks batch with offset={offset}, limit={limit}")
                 
-            all_songs.extend(songs)
-            logger.info(f"Fetched {len(songs)} tracks at offset {offset}, total so far: {len(all_songs)}")
-            
-            # If we received fewer songs than requested, we're at the end
-            if len(songs) < 1000:
-                break
+                # Use the track/all endpoint which is specifically designed for paginated access
+                resp = requests.get(
+                    "https://music.163.com/api/v3/playlist/track/all",
+                    params={
+                        "id": pl_id,
+                        "limit": limit, 
+                        "offset": offset
+                    },
+                    headers={
+                        "User-Agent": "Mozilla/5.0",
+                        "Referer": "https://music.163.com/"
+                    },
+                    timeout=60
+                )
+                resp.raise_for_status()
+                data = resp.json()
                 
-            # Increment offset for next batch
-            offset += 1000
-            
-            # Small delay to avoid rate limiting
-            time.sleep(1)
+                songs = data.get("songs", [])
+                
+                if songs:
+                    logger.info(f"Fetched {len(songs)} tracks at offset {offset}")
+                    all_songs.extend(songs)
+                    
+                    # If we have exactly 804 tracks and we know there are more (from trackIds),
+                    # this is likely the NetEase API limitation
+                    if len(all_songs) == 804 and track_ids and len(track_ids) > 804:
+                        logger.warning("Hit the 804 track limit in NetEase API - switching to trackIds approach")
+                        break
+                else:
+                    logger.warning(f"No songs returned at offset {offset}")
+                    break
+                
+                # Break the loop if:
+                # 1. We got fewer songs than requested (reached the end)
+                # 2. We've fetched all tracks according to trackIds count
+                if len(songs) < limit or (track_ids and len(all_songs) >= len(track_ids)):
+                    break
+                
+                # Move to next batch
+                offset += limit
+                time.sleep(0.5)  # Small delay to avoid rate limiting
+                
+            except Exception as batch_error:
+                logger.error(f"Error fetching batch at offset {offset}: {batch_error}")
+                break
         
+        logger.info(f"After pagination: fetched {len(all_songs)} tracks")
+        
+        # STEP 3: If we got exactly 804 tracks or didn't get all tracks according to trackIds,
+        # use fetch_tracks_by_ids as a fallback to get the remaining tracks
+        if track_ids and ((len(all_songs) == 804 and len(track_ids) > 804) or len(all_songs) < len(track_ids)):
+            logger.info(f"Need to fetch additional tracks: have {len(all_songs)}, need {len(track_ids)}")
+            
+            # Create a set of IDs we already have to avoid duplicates
+            existing_ids = set()
+            for song in all_songs:
+                song_id = song.get("id")
+                if song_id:
+                    existing_ids.add(str(song_id))
+            
+            # Find missing track IDs
+            missing_ids = []
+            for tid in track_ids:
+                id_val = str(tid.get("id") if isinstance(tid, dict) else tid)
+                if id_val not in existing_ids:
+                    missing_ids.append(tid)
+            
+            logger.info(f"Fetching {len(missing_ids)} missing tracks by IDs")
+            missing_tracks = fetch_tracks_by_ids(missing_ids)
+            
+            if missing_tracks:
+                logger.info(f"Successfully fetched {len(missing_tracks)} additional tracks")
+                all_songs.extend(missing_tracks)
+            else:
+                logger.warning(f"Failed to fetch missing tracks by IDs")
+                
+                # If we have exactly 804 tracks, try an alternative approach:
+                # Use the song/detail endpoint to get remaining tracks in batches
+                if len(all_songs) == 804 and track_ids and len(track_ids) > 804:
+                    logger.info("Trying direct song/detail approach for remaining tracks")
+                    
+                    # Get track IDs from 804 onwards
+                    remaining_ids = track_ids[804:]
+                    remaining_tracks = []
+                    
+                    # Fetch remaining tracks in smaller batches
+                    batch_size = 200
+                    for i in range(0, len(remaining_ids), batch_size):
+                        batch_ids = remaining_ids[i:i+batch_size]
+                        logger.info(f"Fetching batch {i//batch_size + 1}/{(len(remaining_ids) + batch_size - 1)//batch_size} ({len(batch_ids)} tracks)")
+                        
+                        try:
+                            ids_str = ",".join([str(tid.get("id") if isinstance(tid, dict) else tid) for tid in batch_ids])
+                            detail_resp = requests.get(
+                                "https://music.163.com/api/song/detail",
+                                params={"ids": f"[{ids_str}]"},
+                                headers={"User-Agent": "Mozilla/5.0", "Referer": "https://music.163.com/"},
+                                timeout=60
+                            )
+                            detail_data = detail_resp.json()
+                            batch_tracks = detail_data.get("songs", [])
+                            
+                            if batch_tracks:
+                                logger.info(f"Got {len(batch_tracks)} tracks from song/detail")
+                                remaining_tracks.extend(batch_tracks)
+                            
+                            time.sleep(0.5)  # Small delay between batches
+                        except Exception as e:
+                            logger.error(f"Error fetching tracks batch using song/detail: {e}")
+                    
+                    if remaining_tracks:
+                        logger.info(f"Successfully fetched {len(remaining_tracks)} remaining tracks using song/detail")
+                        all_songs.extend(remaining_tracks)
+        
+        # Final log
         logger.info(f"Total tracks fetched from NetEase API: {len(all_songs)}")
         return all_songs
     except Exception as e:
@@ -849,60 +921,96 @@ def fetch_tracks_by_ids(track_ids):
         
     try:
         # Convert all IDs to consistent format
-        ids = [tid["id"] if isinstance(tid, dict) else tid for tid in track_ids]
-        headers = {"User-Agent": "Mozilla/5.0", "Referer": "https://music.163.com/"}
+        ids = [tid.get("id", tid) if isinstance(tid, dict) else tid for tid in track_ids]
+        headers = {
+            "User-Agent": "Mozilla/5.0", 
+            "Referer": "https://music.163.com/",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
         tracks = []
         max_retries = 3
         
-        # Increase chunk size for better performance but stay safe
-        CHUNK = 500  
-        logger.info(f"Fetching {len(ids)} tracks in chunks of {CHUNK}")
+        # Smaller chunk size for more reliable requests
+        chunk_size = 200  
+        logger.info(f"Fetching {len(ids)} tracks in chunks of {chunk_size}")
         
-        for i in range(0, len(ids), CHUNK):
-            slice_ids = ids[i:i+CHUNK]
-            # Safe string construction
-            ids_param = "[" + ",".join(map(str, slice_ids)) + "]"
-            logger.info(f"Fetching chunk {i//CHUNK + 1}/{(len(ids) + CHUNK - 1)//CHUNK} ({len(slice_ids)} tracks)")
+        for i in range(0, len(ids), chunk_size):
+            chunk_ids = ids[i:i+chunk_size]
+            logger.info(f"Fetching chunk {i//chunk_size + 1}/{(len(ids) + chunk_size - 1)//chunk_size} ({len(chunk_ids)} tracks)")
             
             retry_count = 0
             success = False
-            chunk_tracks = []
             
-            # Add retry logic
+            # Try multiple API endpoints with retries
             while not success and retry_count < max_retries:
                 try:
+                    # First try the standard song/detail endpoint
+                    ids_param = "[" + ",".join([str(id) for id in chunk_ids]) + "]"
+                    
                     resp = requests.get(
                         "https://music.163.com/api/song/detail", 
                         params={"ids": ids_param}, 
                         headers=headers,
-                        timeout=60  # Increase timeout for large playlists
+                        timeout=60
                     )
                     resp.raise_for_status()
                     chunk_data = resp.json()
                     chunk_tracks = chunk_data.get("songs", [])
-                    success = True
+                    
+                    # Verify we got a reasonable number of tracks back
+                    if chunk_tracks and len(chunk_tracks) > 0:
+                        success = True
+                        tracks.extend(chunk_tracks)
+                        logger.info(f"Successfully fetched {len(chunk_tracks)} tracks from chunk {i//chunk_size + 1}")
+                    else:
+                        # If no tracks returned, try alternative endpoint
+                        logger.warning(f"No tracks returned from song/detail endpoint, trying v2 endpoint")
+                        
+                        # Try alternative endpoint (v2)
+                        alt_resp = requests.post(
+                            "https://music.163.com/weapi/v2/song/detail",
+                            data={
+                                "ids": ids_param,
+                                "csrf_token": ""
+                            },
+                            headers=headers,
+                            timeout=60
+                        )
+                        alt_data = alt_resp.json()
+                        alt_tracks = alt_data.get("songs", [])
+                        
+                        if alt_tracks and len(alt_tracks) > 0:
+                            success = True
+                            tracks.extend(alt_tracks)
+                            logger.info(f"Successfully fetched {len(alt_tracks)} tracks from v2 endpoint")
+                        else:
+                            retry_count += 1
+                            logger.warning(f"Both endpoints failed, retry {retry_count}/{max_retries}")
+                            if retry_count < max_retries:
+                                # Exponential backoff
+                                backoff_time = (2 ** retry_count) + random.uniform(0, 1)
+                                logger.info(f"Retrying in {backoff_time:.2f} seconds...")
+                                time.sleep(backoff_time)
+                
                 except Exception as e:
                     retry_count += 1
-                    logger.warning(f"Error fetching chunk {i//CHUNK + 1}, retry {retry_count}/{max_retries}: {e}")
+                    logger.warning(f"Error fetching chunk {i//chunk_size + 1}, retry {retry_count}/{max_retries}: {e}")
                     if retry_count < max_retries:
                         # Exponential backoff
                         backoff_time = (2 ** retry_count) + random.uniform(0, 1)
                         logger.info(f"Retrying in {backoff_time:.2f} seconds...")
                         time.sleep(backoff_time)
-                    else:
-                        logger.error(f"Max retries reached for chunk {i//CHUNK + 1}")
-                        # Continue to the next chunk instead of raising
-                        break
             
-            tracks.extend(chunk_tracks)
-            logger.info(f"Fetched {len(chunk_tracks)} tracks in this chunk")
+            if not success:
+                logger.error(f"Failed to fetch chunk {i//chunk_size + 1} after {max_retries} retries")
             
-            # Add a small delay to avoid rate limiting
-            if i + CHUNK < len(ids):
+            # Add a small delay between chunks to avoid rate limiting
+            if i + chunk_size < len(ids):
                 time.sleep(1)
         
         logger.info(f"Total tracks fetched by IDs: {len(tracks)}")
         return tracks
+    
     except Exception as e:
         logger.error(f"Error in fetch_tracks_by_ids: {e}")
         traceback.print_exc()
