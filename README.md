@@ -6,10 +6,6 @@
   <br/>
   <p>
     <a href="https://netify-five.vercel.app/" target="_blank"><strong>🚀 Try it now</strong></a> •
-    <a href="#features">Features</a> •
-    <a href="#demo">Demo</a> •
-    <a href="#how-to-use-english">English Guide</a> •
-    <a href="#使用指南-中文">中文指南</a>
   </p>
 </div>
 
@@ -32,12 +28,12 @@
   <table>
     <tr>
       <td align="center">
-        <img src="public/screenshot-home.png" width="400px" alt="Home Screen"/>
+        <img src="public/screenshot-home.jpg" width="400px" alt="Home Screen"/>
         <br/>
         <em>Home Screen</em>
       </td>
       <td align="center">
-        <img src="public/screenshot-transfer.png" width="400px" alt="Transfer Process"/>
+        <img src="public/screenshot-transfer.jpg" width="400px" alt="Transfer Process"/>
         <br/>
         <em>Transfer Process</em>
       </td>
