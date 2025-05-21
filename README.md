@@ -1,4 +1,5 @@
 # Netify: Transfer NetEase Cloud Music playlists to Spotify 🎧
+# 网易云音乐歌单迁移至Spotify工具 🎧
 
 > [简体中文](README_CN.md) | English
 
@@ -20,6 +21,15 @@
 - **Large Playlist Support**: Can handle up to 10,000 tracks
 - **Progress Tracking**: See detailed progress as your music transfers
 - **Missing Tracks Report**: Get a detailed report of any songs that couldn't be found
+
+## 🌟 特点
+
+- **一键式流程**：只需用Spotify登录，粘贴网易云歌单链接，点击转移即可
+- **完整歌单导入**：转移整个歌单，包括歌曲、名称和封面
+- **智能匹配**：先进的算法在Spotify上找到最佳匹配
+- **大型歌单支持**：可处理多达10,000首歌曲
+- **进度追踪**：查看音乐传输的详细进度
+- **缺失歌曲报告**：获取无法找到的歌曲的详细报告
 
 <hr/>
 
