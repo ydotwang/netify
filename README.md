@@ -1,49 +1,16 @@
-# Netify for macOS
+# Netify: Transfer NetEase Cloud Music playlists to Spotify 🎧
 
 <div align="center">
   <img src="netify.jpg" alt="Netify logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
   <br/>
   <p>
-    <a href="https://netify-five.vercel.app/" target="_blank"><strong>🚀 Try it now on macOS</strong></a>
+    <a href="https://netify-five.vercel.app/" target="_blank"><strong>🚀 Try it now</strong></a>
   </p>
 </div>
 
-## macOS-Specific Instructions
+<hr/>
 
-This version is optimized for macOS 24.2.0.
-
-### Installation on macOS
-
-```bash
-# Install dependencies
-npm install
-
-# Run the application
-npm run dev
-```
-
-### macOS Keyboard Shortcuts
-
-- **⌘ + R**: Refresh the application
-- **⌘ + L**: Focus on the playlist URL input
-- **⌘ + Enter**: Submit the transfer request
-
-### Using Spotlight to Open
-
-You can quickly access Netify in your browser using Spotlight:
-1. Press **⌘ + Space**
-2. Type "netify"
-3. Press Enter when your bookmark appears
-
-### Using with Apple Music
-
-If you're migrating from NetEase and also use Apple Music, you can use Netify alongside with these steps:
-1. Transfer your playlist to Spotify using Netify
-2. Use Spotify to Apple Music transfer tools to complete the migration
-
-## Standard Features
-
-
+## 🌟 Features
 
 - **Simple One-Click Process**: Just log in with Spotify, paste a NetEase playlist link, and click Transfer
 - **Full Playlist Import**: Transfer entire playlists including tracks, name, and cover art
@@ -52,6 +19,125 @@ If you're migrating from NetEase and also use Apple Music, you can use Netify al
 - **Progress Tracking**: See detailed progress as your music transfers
 - **Missing Tracks Report**: Get a detailed report of any songs that couldn't be found
 
+<hr/>
 
+## 📱 Demo
 
-For more information, visit our [website](https://netify-five.vercel.app/).
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <img src="screenshot-home.png" width="400px" alt="Home Screen"/>
+        <br/>
+        <em>Home Screen</em>
+      </td>
+      <td align="center">
+        <img src="screenshot-transfer.png" width="400px" alt="Transfer Process"/>
+        <br/>
+        <em>Transfer Process</em>
+      </td>
+    </tr>
+  </table>
+</div>
+
+## 🔍 How to use
+
+1. Visit [Netify Web App](https://netify-five.vercel.app/) and click **Log in with Spotify**
+2. Authorize the application (requires Spotify account which is the email you use)
+3. Copy a NetEase Cloud Music playlist link, for example:
+   ```
+   https://y.music.163.com/m/playlist?id=123456
+   ```
+4. Paste the link into the input box and click **Transfer to Spotify**
+5. Wait for the process to complete - you'll see a progress bar
+6. When finished, click "Open playlist in Spotify" to view your new playlist
+
+<hr/>
+
+## 🛠️ Technology Stack
+
+- **Frontend**: Next.js 14, Tailwind CSS, React
+- **Backend**: FastAPI (Python), hosted on Fly.io
+- **APIs**: Spotify Web API, NetEase Cloud Music API
+- **Deployment**: Vercel (frontend), Fly.io (backend)
+
+## 💻 Development
+
+### Prerequisites
+
+1. Node.js 18+ for the frontend
+2. Python 3.9+ for the backend API
+3. A Spotify Developer account and registered application
+
+### Environment Setup
+
+Create a `.env.local` file in the root directory:
+```
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+NEXT_PUBLIC_SPOTIFY_CLIENT_ID=your_spotify_client_id
+NEXT_PUBLIC_SPOTIFY_REDIRECT_URI=http://localhost:3000/callback
+```
+
+For the backend, create a `.env` file in the `api` directory:
+```
+SPOTIFY_CLIENT_ID=your_spotify_client_id
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=http://localhost:3000/callback
+```
+
+### Running Locally
+
+Frontend:
+```bash
+# Install frontend dependencies
+npm install
+
+# Run the frontend
+npm run dev
+```
+
+Backend:
+```bash
+# Create a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install backend dependencies
+cd api
+pip install -r requirements.txt
+
+# Run the backend
+uvicorn backend.main:app --reload --port 8080
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 🚀 Deployment
+
+### Frontend (Vercel)
+
+1. Push your code to a GitHub repository
+2. Import the project in Vercel
+3. Add the necessary environment variables:
+   - `NEXT_PUBLIC_BACKEND_URL`: URL of your deployed backend API
+   - `NEXT_PUBLIC_SPOTIFY_CLIENT_ID`: Your Spotify app's client ID
+   - `NEXT_PUBLIC_SPOTIFY_REDIRECT_URI`: Your deployed app's callback URL
+
+### Backend (Fly.io)
+
+1. Install the [Fly.io CLI](https://fly.io/docs/hands-on/install-flyctl/)
+2. Log in to Fly.io: `flyctl auth login`
+3. Deploy the API:
+   ```bash
+   flyctl deploy
+   ```
+4. Set environment secrets:
+   ```bash
+   flyctl secrets set SPOTIFY_CLIENT_ID=your_client_id
+   flyctl secrets set SPOTIFY_CLIENT_SECRET=your_client_secret
+   flyctl secrets set SPOTIFY_REDIRECT_URI=https://your-deployed-frontend.com/callback
+   ```
+
+## 📝 License
+
+This project is [MIT licensed](LICENSE).

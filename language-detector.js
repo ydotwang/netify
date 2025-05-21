@@ -1,17 +1,20 @@
 #!/usr/bin/env node
 
 /**
- * A simple Node.js script to detect the system language and open the appropriate README
+ * Netify Language Detector
+ * 
+ * This script detects the user's system language and displays the README
+ * in either Chinese or English accordingly.
+ * 
  * Run with: node language-detector.js
  */
 
-const os = require('os');
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
-// Create the README files if they don't exist yet
-const createReadmeFiles = () => {
+// Make sure the README files exist
+const checkAndCreateReadmeFiles = () => {
   // English README
   const englishReadme = `# Netify: Transfer NetEase Cloud Music playlists to Spotify 🎧
 
@@ -304,55 +307,59 @@ uvicorn backend.main:app --reload --port 8080
 本项目采用 [MIT 许可](LICENSE)。
 `;
 
-  // Write the files
-  fs.writeFileSync(path.join(__dirname, 'README.en.md'), englishReadme);
-  fs.writeFileSync(path.join(__dirname, 'README.zh.md'), chineseReadme);
+  // Create the README files if they don't exist
+  if (!fs.existsSync(path.join(__dirname, 'README.en.md'))) {
+    fs.writeFileSync(path.join(__dirname, 'README.en.md'), englishReadme);
+    console.log("Created English README (README.en.md)");
+  }
+  
+  if (!fs.existsSync(path.join(__dirname, 'README.zh.md'))) {
+    fs.writeFileSync(path.join(__dirname, 'README.zh.md'), chineseReadme);
+    console.log("Created Chinese README (README.zh.md)");
+  }
 };
 
-// Function to detect system language and open the appropriate README
-const detectLanguageAndOpenReadme = () => {
-  // Create README files if they don't exist
-  createReadmeFiles();
-  
-  // Get system language
-  let systemLanguage = '';
+// Function to detect system language
+const detectLanguage = (callback) => {
+  // Make sure README files exist
+  checkAndCreateReadmeFiles();
   
   // Different ways to detect system language based on OS
   if (process.platform === 'darwin') {
     // macOS
     exec('defaults read -g AppleLocale', (error, stdout) => {
       if (!error) {
-        systemLanguage = stdout.trim();
-        selectReadme(systemLanguage);
+        const systemLanguage = stdout.trim();
+        callback(systemLanguage);
       } else {
         // Fallback to LANG environment variable
-        systemLanguage = process.env.LANG || '';
-        selectReadme(systemLanguage);
+        const systemLanguage = process.env.LANG || '';
+        callback(systemLanguage);
       }
     });
   } else if (process.platform === 'win32') {
     // Windows
     exec('powershell -command "[System.Globalization.CultureInfo]::CurrentUICulture.Name"', (error, stdout) => {
       if (!error) {
-        systemLanguage = stdout.trim();
-        selectReadme(systemLanguage);
+        const systemLanguage = stdout.trim();
+        callback(systemLanguage);
       } else {
         // Fallback
-        systemLanguage = process.env.LANG || '';
-        selectReadme(systemLanguage);
+        const systemLanguage = process.env.LANG || '';
+        callback(systemLanguage);
       }
     });
   } else {
     // Linux and others - use LANG environment variable
-    systemLanguage = process.env.LANG || '';
-    selectReadme(systemLanguage);
+    const systemLanguage = process.env.LANG || '';
+    callback(systemLanguage);
   }
 };
 
 // Function to select and display the appropriate README
 const selectReadme = (language) => {
   const isChinese = language.toLowerCase().includes('zh') || 
-                    language.toLowerCase().includes('cn');
+                   language.toLowerCase().includes('cn');
   
   const readmePath = isChinese ? 'README.zh.md' : 'README.en.md';
   const content = fs.readFileSync(path.join(__dirname, readmePath), 'utf8');
@@ -361,8 +368,13 @@ const selectReadme = (language) => {
   fs.writeFileSync(path.join(__dirname, 'README.md'), content);
   
   console.log(`System language detected: ${language}`);
-  console.log(`Displaying ${isChinese ? 'Chinese' : 'English'} README`);
+  console.log(`README set to ${isChinese ? 'Chinese' : 'English'} version.`);
+};
+
+// Main function
+const main = () => {
+  detectLanguage(selectReadme);
 };
 
 // Run the script
-detectLanguageAndOpenReadme(); 
+main(); 

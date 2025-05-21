@@ -7,13 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "update-readme": "node language-detector.js",
-    "os-readme": "node os-specific-readme.js",
-    "readme": "node generate-readme.js",
-    "readme:lang": "node generate-readme.js --language-only",
-    "readme:os": "node generate-readme.js --os-only",
-    "setup": "./setup-readme.sh",
-    "postinstall": "./setup-readme.sh"
+    "readme:auto": "node language-detector.js",
+    "readme:en": "./switch-language.sh en",
+    "readme:zh": "./switch-language.sh zh",
+    "postinstall": "./switch-language.sh"
   },
   "dependencies": {
     "@chakra-ui/next-js": "^2.2.0",
