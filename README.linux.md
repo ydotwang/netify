@@ -1,18 +1,18 @@
-# Netify for macOS
+# Netify for Linux
 
 <div align="center">
   <img src="netify.jpg" alt="Netify logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
   <br/>
   <p>
-    <a href="https://netify-five.vercel.app/" target="_blank"><strong>🚀 Try it now on macOS</strong></a>
+    <a href="https://netify-five.vercel.app/" target="_blank"><strong>🚀 Try it now on Linux</strong></a>
   </p>
 </div>
 
-## macOS-Specific Instructions
+## Linux-Specific Instructions
 
-This version is optimized for macOS 24.2.0.
+This version is optimized for Linux distributions.
 
-### Installation on macOS
+### Installation on Linux
 
 ```bash
 # Install dependencies
@@ -22,24 +22,20 @@ npm install
 npm run dev
 ```
 
-### macOS Keyboard Shortcuts
+### Linux Terminal Integration
 
-- **⌘ + R**: Refresh the application
-- **⌘ + L**: Focus on the playlist URL input
-- **⌘ + Enter**: Submit the transfer request
+You can create an alias in your shell configuration (.bashrc, .zshrc, etc.) for quick access:
 
-### Using Spotlight to Open
+```bash
+echo 'alias netify="cd /path/to/netify && npm run dev"' >> ~/.bashrc
+source ~/.bashrc
+```
 
-You can quickly access Netify in your browser using Spotlight:
-1. Press **⌘ + Space**
-2. Type "netify"
-3. Press Enter when your bookmark appears
+### System Requirements
 
-### Using with Apple Music
-
-If you're migrating from NetEase and also use Apple Music, you can use Netify alongside with these steps:
-1. Transfer your playlist to Spotify using Netify
-2. Use Spotify to Apple Music transfer tools to complete the migration
+- Node.js 18+ (install via your distribution's package manager)
+- Modern browser like Firefox or Chrome
+- Python 3.9+ for the backend API
 
 ## Standard Features
 
