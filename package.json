@@ -6,11 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "readme:auto": "node language-detector.js",
-    "readme:en": "./switch-language.sh en",
-    "readme:zh": "./switch-language.sh zh",
-    "postinstall": "./switch-language.sh"
+    "lint": "next lint"
   },
   "dependencies": {
     "@chakra-ui/next-js": "^2.2.0",

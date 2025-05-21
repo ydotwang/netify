@@ -1,5 +1,7 @@
 # Netify: Transfer NetEase Cloud Music playlists to Spotify 🎧
 
+> [简体中文](README_CN.md) | English
+
 <div align="center">
   <img src="netify.jpg" alt="Netify logo" width="200" style="border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" />
   <br/>
@@ -39,6 +41,7 @@
     </tr>
   </table>
 </div>
+
 
 ## 🔍 How to use
 
